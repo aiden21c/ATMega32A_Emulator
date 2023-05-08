@@ -47,4 +47,5 @@ timing
 *~
 *example*
 *sopc_*
+*.vscode
 PLLJ_PLLSPE_INFO.txt # The generated PLL specification file
