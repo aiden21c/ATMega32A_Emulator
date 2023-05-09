@@ -42,7 +42,6 @@ timing
 *.sof
 *.sopc_builder
 *.summary
-*.tcl
 *.txt
 *~
 *example*
