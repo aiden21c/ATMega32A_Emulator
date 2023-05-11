@@ -42,9 +42,9 @@ timing
 *.sof
 *.sopc_builder
 *.summary
-*.tcl
 *.txt
 *~
 *example*
 *sopc_*
+*.vscode
 PLLJ_PLLSPE_INFO.txt # The generated PLL specification file
