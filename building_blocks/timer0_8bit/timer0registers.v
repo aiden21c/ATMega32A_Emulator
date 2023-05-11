@@ -22,11 +22,13 @@ module timer0registers(
 	output [7:0] TIFR_output		// 8 bit output for the TIFR register
 );
 
+wire [7:0] TIFR_output_wire;
+
 // The register used to store the current timer value
 d_flip_flop_multi_bit_en #(8, 0) TCNT0 (
 	.d(TCNT_input), 
-	.clk(countClock), 
-	.clr_n(clear_count | system_reset),
+	.clk(sysClock), 
+	.clr_n(clear_count | ~system_reset),
 	.enable(1'b1),
 	.Q(TCNT_output), 
 	.Qn()
@@ -56,7 +58,7 @@ d_flip_flop_multi_bit_en #(8, 0) OCR0 (
 
 // The output control register. Used to compare all 8 bits of this register to the value within TCNT0
 d_flip_flop_multi_bit_en #(8, 0) TIMSK0 (
-	.d(TMSK_input), 
+	.d(TIMSK_input), 
 	.clk(sysClock), 
 	.clr_n(system_reset), 
 	.enable(TIMSK_write_enable),
@@ -68,12 +70,14 @@ d_flip_flop_multi_bit_en #(8, 0) TIMSK0 (
 // Bit1 is the Output Compare flag (OCF), set to 1 when a match occurs between OCR and TCNT
 // Bit0 is the timer/counter overflow flag (TOV), set to 1 an overflow occurs 
 d_flip_flop_multi_bit_en #(8, 0) TIFR0 (
-	.d(TIFR_input), 
+	.d(TIFR_input ^ TIFR_output_wire), 			// Needs work
 	.clk(sysClock), 
 	.clr_n(system_reset), 
 	.enable(TIFR_write_enable),
-	.Q(TIFR_output), 
+	.Q(TIFR_output_wire), 
 	.Qn()
 );
+
+assign TIFR_output = TIFR_output_wire;
 
 endmodule
