@@ -41,7 +41,9 @@ clockSelector clockSelector(
 	.sysClock(sysClock),
 	.S(TCCR_output[2:0]),
 	.rst_n(rst_n),
-	.OUT(countClock)
+	.OUT(countClock),
+	.div(),
+	.cnt()
 );
 
 timer_control_unit timer_control_unit(
@@ -69,7 +71,7 @@ timer0registers timer0registers(
 	.TCCR_write_enable(TCCR_write_enable),
 	.OCR_write_enable(OCR_write_enable),
 	.TIMSK_write_enable(TIMSK_write_enable),
-	.TIFR_write_enable(TIFR_write_enable_wire | TIFR_write_enable),
+	.TIFR_write_enable((TIFR_write_enable_wire & ~(|TIFR_output[1:0])) | TIFR_write_enable),
 	
 	.clear_count(clear_count),				// Used to clear the TCNT0 register to 0
 	.system_reset(rst_n),					// Used as an entire system reset

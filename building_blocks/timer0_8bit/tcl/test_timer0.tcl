@@ -23,6 +23,7 @@ proc runSim {} {
     force -freeze TCCR_input 00000010
     force -freeze TIMSK_input 00000000
     force -freeze TIFR_input 00000000
+    # run 200ns
 
     # Write the data to the registers
     force -freeze TCNT_write_enable 0
