@@ -3,12 +3,13 @@
 
 module fullAdder(
 	// Declare the inputs and outputs
-	input A, B, Cin,
+	input A, B, Cin, 
+	input Add_n_Sub,	// Add (0) subtract (1)
 	output Sum, Cout
 );
 
 // Asynchronous outputs
-assign Sum = (A ^ B) ^ Cin;
-assign Cout = (A & B) | ((A ^ B) & Cin);
+assign Sum = (A ^ (B ^ Add_n_Sub)) ^ Cin;
+assign Cout = (A & (B ^ Add_n_Sub)) | ((A ^ (B ^ Add_n_Sub)) & Cin);
 
 endmodule
