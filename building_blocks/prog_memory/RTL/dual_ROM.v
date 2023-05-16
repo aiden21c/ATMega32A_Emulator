@@ -16,7 +16,8 @@ reg [7:0] rom [32767:0];
 reg [7:0] outA;
 reg [7:0] outB;
 
-initial $readmemh("D:/Documents/Uni/QuartusProjects/EEET2162_ATMega32A_Emulation/building_blocks/prog_memory/mem.hex", rom);
+//initial $readmemh("D:/Documents/Uni/QuartusProjects/EEET2162_ATMega32A_Emulation/building_blocks/prog_memory/mem.hex", rom);
+initial $readmemh("mem.hex", rom);
 
 always @(posedge(clk)) begin 
 	if (WE == 1'b1) rom[write_addr] = data;
