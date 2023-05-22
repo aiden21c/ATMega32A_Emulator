@@ -1,4 +1,4 @@
-proc test {args} {
+proc test {} {
       restart -force -nowave
       add wave *
       property wave -radix hex *
