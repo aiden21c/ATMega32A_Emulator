@@ -9,10 +9,12 @@ proc runSim {} {
    force -freeze reset_n 0
    force -freeze PC_overwrite 0
    force -freeze PC_new 0
+   force -freeze PC_inc 1
+   force -freeze hold 0 
 
    run 200ns
 
    force -freeze reset_n 1
 
-   run 2000ns 
+   run 4000ns 
 }
