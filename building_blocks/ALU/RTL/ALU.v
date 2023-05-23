@@ -164,7 +164,6 @@ always @(*) begin
 				else begin 
 					C = A[0];
 					result = A >> 1; 
-					result[7] = result[6];
 					Z = !(|result);
 					N = result[7];
 					V = N ^ C;
