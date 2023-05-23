@@ -17,19 +17,19 @@ module ALU (
 	input mem_write,
 	input [7:0] mem_data,
 
-	input [7:0] A,
-	input [7:0] B,
+	input [7:0] arg1,
+	input [7:0] arg2,
 	
 	input [2:0] op,
 	
 	input use_carry, // if set will incorporate carry into add, sub and shifts 
 	
-	output [7:0] Q,
+	output [15:0] Q,
 	output [7:0] sreg
 );
 
 // SREG: ITHSVNZC
-reg [7:0] result; 
+reg [15:0] result; 
 reg I; // interrupt
 reg T; // bit copy storage 
 reg H; // half carry
@@ -38,17 +38,19 @@ reg V; // twos complement overflow
 reg N; // negative 
 reg Z; // zero
 reg C; // carry 
-wire [7:0] status = {I,T,H,S,V,N,Z,C}
+wire [7:0] status = {I,T,H,S,V,N,Z,C};
 wire [7:0] mux_out;
+wire [15:0] A = {8'b0, arg1};
+wire [15:0] B = {8'b0, arg2}; 
 
-multi_bit_multiplexer_2way #(.WIDTH = 4'h8) sreg_sel (
+multi_bit_multiplexer_2way #(.WIDTH(4'h8)) sreg_sel (
 	.A(status),
 	.B(mem_data),
 	.S(mem_write),
 	.out(mux_out)
-)
+);
 
-d_flip_flop_multi_bit_en #(.WIDTH = 4'h8) status_reg (
+d_flip_flop_multi_bit_en #(.WIDTH(4'h8), .RESETVAL(8'b0)) status_reg (
 	.d(mux_out),
 	.clk(clk),
 	.clr_n(reset_n),
@@ -62,7 +64,7 @@ always @(*) begin
 		3'b000: begin //Adition 
 			if (use_carry == 1'b1) begin //ADC	
 				result = A + B + sreg[0];
-				C = A[7] & B[7] | A[7] & ~result[7] | B[7] & ~result[7];
+				C = result[8];
 				Z = !(|result);
 				N = result[7];
 				V = A[7] & B[7] & ~result[7] + ~A[7] & ~B[7] & result[7];
@@ -73,7 +75,7 @@ always @(*) begin
 			end
 			else begin //ADD
 				result = A + B;
-				C = A[7] & B[7] | A[7] & ~result[7] | B[7] & ~result[7];
+				C = result[8];
 				Z = !(|result);
 				N = result[7];
 				V = A[7] & B[7] & ~result[7] + ~A[7] & ~B[7] & result[7];
@@ -84,9 +86,9 @@ always @(*) begin
 			end
 		end 
 		3'b001: begin
-			if (use_carry == 1'b1) begin 
+			if (use_carry == 1'b1) begin //SBC
 				result = A - B - sreg[0];
-				C = !A[7] & B[7] | B[7] & result[7] | result[7] & !A[7];
+				C = result[8];
 				Z = !(|result);
 				N = result[7];
 				V = A[7] & !B[7] & ~result[7] + ~A[7] & ~B[7] & result[7];
@@ -95,9 +97,9 @@ always @(*) begin
 				T = sreg[6];
 				I = sreg[7];
 			end 
-			else begin
+			else begin	//SUB
 				result = A - B;
-				C = !A[7] & B[7] | B[7] & result[7] | result[7] & !A[7];
+				C = result[8];
 				Z = !(|result);
 				N = result[7];
 				V = A[7] & !B[7] & ~result[7] + ~A[7] & ~B[7] & result[7];
@@ -109,17 +111,69 @@ always @(*) begin
 		end
 		3'b010: begin // this needs to use 2 registers 
 			result = A * B;
+			C = result[15];
+			Z = !(|result);
+			N = sreg[2];
+			V = sreg[3];
+			S = sreg[4];
+			H = sreg[5];
+			T = sreg[6];
+			I = sreg[7];
 		end
 		3'b011: 
-			begin
+			begin //left shift 
 				if (use_carry == 1'b1) begin 
-					result = A << B;
+					result = A << 1;
+					result[0] = sreg[0];
+					C = result[8];
+					result[8] = 0; 
+					Z = !(|result);
+					N = result[7];
+					V = N ^ C;
+					S = N ^ V;
+					H = result[3];
+					T = sreg[6];
+					I = sreg[7];
 				end
 				else begin 
-					result = A << B;
+					result = A << 1;
+					C = result[8];
+					result[8] = 0; 
+					Z = !(|result);
+					N = result[7];
+					V = N ^ C;
+					S = N ^ V;
+					H = result[3];
+					T = sreg[6];
+					I = sreg[7];
 				end
 			end
-		3'b100: result = A >> B;
+		3'b100: begin // right shift
+			if (use_carry == 1'b1) begin 
+					C = A[0];
+					result = A >> 1;
+					result[7] = sreg[0];
+					Z = !(|result);
+					N = result[7];
+					V = N ^ C;
+					S = N ^ V;
+					H = result[3];
+					T = sreg[6];
+					I = sreg[7];
+				end
+				else begin 
+					C = A[0];
+					result = A >> 1; 
+					result[7] = result[6];
+					Z = !(|result);
+					N = result[7];
+					V = N ^ C;
+					S = N ^ V;
+					H = result[3];
+					T = sreg[6];
+					I = sreg[7];
+				end
+		end 
 		3'b101: begin //AND
 			result = A & B;
 			C = sreg[0];
@@ -127,7 +181,7 @@ always @(*) begin
 			N = result[7];
 			V = 1'b0;
 			S = V ^ N;
-			H = sreg[5]
+			H = sreg[5];
 			T = sreg[6];
 			I = sreg[7];
 		end
@@ -138,7 +192,7 @@ always @(*) begin
 			N = result[7];
 			V = 1'b0;
 			S = V ^ N;
-			H = sreg[5]
+			H = sreg[5];
 			T = sreg[6];
 			I = sreg[7];
 		end
@@ -149,12 +203,20 @@ always @(*) begin
 			N = result[7];
 			V = 1'b0;
 			S = V ^ N;
-			H = sreg[5]
+			H = sreg[5];
 			T = sreg[6];
 			I = sreg[7];
 		end 
 		default: begin 
-			result = 8'b0;
+			result = 16'b0;
+			C = sreg[0];
+			Z = sreg[1];
+			N = sreg[2];
+			V = sreg[3];
+			S = sreg[4];
+			H = sreg[5];
+			T = sreg[6];
+			I = sreg[7];
 		end
 	endcase 
 end 
