@@ -35,11 +35,11 @@ gpio gpio(
 	.PORTA_output(GPIOA_port),
 	.PINA_output(pinA_in),
 	
-	// GPIOA inputs and outputs
+	// GPIOB inputs and outputs
 	.DDRB_write_enable(),
 	.DDRB_input_data(),
 	
-	.PORTB_write_enable(|(~pinA_in)),
+	.PORTB_write_enable(1'b1),
 	.PORTB_input_data(pinA_in),
 	
 	.PINB_input_data(),	
