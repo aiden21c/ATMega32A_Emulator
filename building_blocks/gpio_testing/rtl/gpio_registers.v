@@ -39,6 +39,6 @@ multi_bit_multiplexer_2way #(WIDTH) PORTx_input_selector (.A(PORTx_output), .B(P
 d_flip_flop_multi_bit #(WIDTH, DDRx_default) PORTx (.d(PORTx_input_wire), .clk(clk), .clr_n(clr_n), .Q(PORTx_output), .Qn());
 
 // The PIN (input) register
-d_flip_flop_multi_bit #(WIDTH, DDRx_default) PINx (.d(PINx_input_data & ~(DDRx_output)), .clk(clk), .clr_n(clr_n), .Q(PINx_output), .Qn());
+d_flip_flop_multi_bit #(WIDTH, DDRx_default) PINx (.d((PINx_input_data & ~(DDRx_output)) | (PORTx_output & DDRx_output)), .clk(clk), .clr_n(clr_n), .Q(PINx_output), .Qn());
 
 endmodule
