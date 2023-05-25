@@ -67,6 +67,11 @@ always @(*) begin
 			arg1 = {1'b0, n2[1:0], n1, n0[3]};
 			arg2 = 8'b0;
 		end 
+		else begin 
+			id = 8'b0;
+			arg1 = 8'b0;
+			arg2 = 8'b0;
+		end
 	end 
 	else if (n3 == 4'b1001 && n2[3:1] == 3'b101 && n0[3:1] == 3'b111) begin // CALL
 	 	// Handle 2nd part of K
@@ -74,7 +79,7 @@ always @(*) begin
 		arg1 = {2'b00, n2[0], n1, n0[3]};
 		arg2 = 8'b0;
 	end
-	else if (instruction == 16'b10001010011111000) begin // CLI 
+	else if (instruction == 16'b1001010011111000) begin // CLI 
 		id = 8'ha;
 		arg1 = 8'b0;
 		arg2 = 8'b0;
@@ -200,12 +205,12 @@ always @(*) begin
 		arg1 = {n1, n0};	// K low 8 bits
 		arg2 = {4'b0, n2}; // K high 4 bits
 	end
-	else if (instruction == 16'b1001 0101 0000 1000) begin // RET
+	else if (instruction == 16'b1001010100001000) begin // RET
 		id = 8'h2d;
 		arg1 = 8'b0;
 		arg2 = 8'b0;
 	end
-	else if (instruction == 16'b001 0101 0001 1000) begin // RETI
+	else if (instruction == 16'b001010100011000) begin // RETI
 		id = 8'h2e;
 		arg1 = 8'b0;
 		arg2 = 8'b0;
@@ -221,13 +226,11 @@ always @(*) begin
 		arg1 = {3'b000, n2[0], n1};	// Rd
 		arg2 = 8'b0;
 	end
-	else if (instruction == 16'b1001 0100 0111 1000) begin // SEI
+	else if (instruction == 16'b1001010001111000) begin // SEI
 		id = 8'h32;
 		arg1 = 8'b0;
 		arg2 = 8'b0;
-	end 
-	// skip 0x33 to 0x36 for st(x)
-	// skip 0x37 for replica 
+	end // skip 0x33 to 0x36 for st(x) 		skip 0x37 for replica 
 	else if (n3 == 4'b1000 && n2[3:1] == 3'b001 && n0 == 4'b1000) begin // ST(Y)
 		id = 8'h38;
 		arg1 = {3'b000, n2[0], n1};	// Rr
@@ -258,6 +261,11 @@ always @(*) begin
 		id = 8'h41;
 		arg1 = {4'b0000, n1};	// Rd
 		arg2 = {n2, n0}; // K
+	end
+	else begin 
+		id = 8'b0;
+		arg1 = 8'b0;
+		arg2 = 8'b0;
 	end
 end
 
