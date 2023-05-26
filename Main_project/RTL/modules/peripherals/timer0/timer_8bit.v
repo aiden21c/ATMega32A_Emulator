@@ -1,5 +1,5 @@
 // Implimentation of the 8-bit Timer0 of the ATMega32A
-module timer0_8bit(
+module timer_8bit(
 	input sysClock,				// The system clock
 	input rst_n,
 	input [7:0] TCNT_data,		// 8 bit input used to update the TCNT0 register with a specified value

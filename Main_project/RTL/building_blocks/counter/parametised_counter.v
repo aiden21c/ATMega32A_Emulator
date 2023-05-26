@@ -15,7 +15,7 @@ output clock;
 wire TC_out;
 wire dOut;
 
-param_counter_noCEP #(counterWidth, startValue) clock_100Hz(
+param_counter_noCEP #(counterWidth, startValue) clock_Hz(
 	.MR_n(MR_n), 
 	.clock50(clock50), 
 	.Qn_out(Qn_out), 

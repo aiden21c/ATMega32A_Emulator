@@ -26,12 +26,12 @@ timing
 *.cmp
 *.done
 *.eqn
-*.hex
 *.html
 *.jdi
 *.jpg
 *.mif
 *.pin
+*.sld
 *.pof
 *.ptf.*
 *.qar

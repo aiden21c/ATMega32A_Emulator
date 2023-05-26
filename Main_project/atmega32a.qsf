@@ -47,8 +47,32 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP "-40"
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 256
-set_global_assignment -name VERILOG_FILE RTL/atmega32a.v
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name HEX_FILE resources/dummy.hex
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/clockSelector.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer1/timer_control_unit1.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer1/timer_16bit_registers.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer1/timer_16bit.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer0/timer0registers.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer0/timer_control_unit0.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer0/timer_8bit.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/gpio/gpio_registers.v
+set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/gpio/gpio.v
+set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/register_file.v
+set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/prog_memory.v
+set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/dual_ROM.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/selector_32way.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_32way.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_4way.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_2way.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/latches_flipflops/d_flip_flop_multi_bit_en.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/latches_flipflops/d_flip_flop_multi_bit.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/counter/parametised_counter.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/counter/param_counter_noCEP.v
+set_global_assignment -name VERILOG_FILE RTL/building_blocks/arithmetic/fullAdder.v
+set_global_assignment -name VERILOG_FILE RTL/atmega32a.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
