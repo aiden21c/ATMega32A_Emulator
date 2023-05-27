@@ -1,10 +1,8 @@
-module timer_16bit_registers(
+module timer0registers(
 	input sysClock,					// The system clock used tobit input used to update the TIFR register update the timer registers
-	input [7:0] TCNT1H_input,		// 8 bit input used to update the TCNT1 high register with a specified value
-	input [7:0] TCNT1L_input,		// 8 bit input used to update the TCNT1 low register with a specified value
-	input [7:0] TCCR_input,			// 8 bit input used to update the TCCR1 register	
-	input [7:0] OCR1AH_input,		// 8 bit input used to update the OCR1 register
-	input [7:0] OCR1AL_input,		// 8 bit input used to update the OCR1 register
+	input [7:0] TCNT_input,			// 8 bit input used to update the TCNT0 register with a specified value
+	input [7:0] TCCR_input,			// 8 bit input used to update the TCCR0 register	
+	input [7:0] OCR_input,			// 8 bit input used to update the OCR0 register
 	input [7:0] TIMSK_input,		// 8 bit input used to update the TIMSK register
 	input [7:0] TIFR_input,			// 8 bit input used to update the TIFR register
 	
@@ -17,11 +15,9 @@ module timer_16bit_registers(
 	input clear_count,				// Used to clear the TCNT0 register to 0
 	input system_reset,				// Used as an entire system reset
 	
-	output [7:0] TCNT1H_output,	// 8 bit high output for the TCNT register
-	output [7:0] TCNT1L_output,	// 8 bit low output for the TCNT register
+	output [7:0] TCNT_output,		// 8 bit output for the TCNT register
 	output [7:0] TCCR_output,		// 8 bit output for the TCCR register
-	output [7:0] OCR1AH_output,		// 8 bit output for the OCR register
-	output [7:0] OCR1AL_output,		// 8 bit output for the OCR register
+	output [7:0] OCR_output,		// 8 bit output for the OCR register
 	output [7:0] TIMSK_output,		// 8 bit output for the TIMSK register
 	output [7:0] TIFR_output		// 8 bit output for the TIFR register
 );
@@ -29,13 +25,8 @@ module timer_16bit_registers(
 wire [7:0] TIFR_output_wire;
 wire [7:0] TIFR_data_input;
 
-wire [15:0] TCNT_input = (TCNT1H_input << 8) | TCNT1L_input;
-wire [15:0] OCR_input = (OCR1AH_input << 8) | OCR1AL_input;
-wire [15:0] TCNT_output;
-wire [15:0] OCR_output;
-
 // The register used to store the current timer value
-d_flip_flop_multi_bit_en #(16, 0) TCNT1 (
+d_flip_flop_multi_bit_en #(8, 0) TCNT0 (
 	.d(TCNT_input), 
 	.clk(sysClock), 
 	.clr_n(clear_count | system_reset),
@@ -47,7 +38,7 @@ d_flip_flop_multi_bit_en #(16, 0) TCNT1 (
 // The Timer/Counter Control Register
 // Bits 7:3 are unused. Bits 2:0 are used as the clock select bits
 // See table 15-6 of the ATMega32A data sheet for the use of the clock select bits
-d_flip_flop_multi_bit_en #(8, 0) TCCR1B (
+d_flip_flop_multi_bit_en #(8, 0) TCCR0 (
 	.d(TCCR_input), 
 	.clk(sysClock), 
 	.clr_n(system_reset),
@@ -57,7 +48,7 @@ d_flip_flop_multi_bit_en #(8, 0) TCCR1B (
 );
 
 // The output control register. Used to compare all 8 bits of this register to the value within TCNT0
-d_flip_flop_multi_bit_en #(16, 0) OCR1 (
+d_flip_flop_multi_bit_en #(8, 0) OCR0 (
 	.d(OCR_input), 
 	.clk(sysClock), 
 	.clr_n(system_reset), 
@@ -66,8 +57,8 @@ d_flip_flop_multi_bit_en #(16, 0) OCR1 (
 	.Qn()
 );
 
-// The timer mask register
-d_flip_flop_multi_bit_en #(8, 0) TIMSK1 (
+// The output control register. Used to compare all 8 bits of this register to the value within TCNT0
+d_flip_flop_multi_bit_en #(8, 0) TIMSK0 (
 	.d(TIMSK_input), 
 	.clk(sysClock), 
 	.clr_n(system_reset), 
@@ -77,12 +68,12 @@ d_flip_flop_multi_bit_en #(8, 0) TIMSK1 (
 );
 
 // A D-type flip flop used to latch the feedback output of the TIFR XOR input
-d_flip_flop_multi_bit #(8,0) TIFR1_input (.d(TIFR_input ^ TIFR_output_wire), .clk(TIFR_write_enable | ~system_reset), .clr_n(system_reset), .Q(TIFR_data_input), .Qn());
+d_flip_flop_multi_bit #(8,0) TIFR0_input (.d(TIFR_input ^ TIFR_output_wire), .clk(TIFR_write_enable | ~system_reset), .clr_n(system_reset), .Q(TIFR_data_input), .Qn());
 
 // The timer interrupt flag register. A 1 must be written to this register to clear it
-// Bit4 is the Output Compare flag (OCF), set to 1 when a match occurs between OCR and TCNT
+// Bit1 is the Output Compare flag (OCF), set to 1 when a match occurs between OCR and TCNT
 // Bit0 is the timer/counter overflow flag (TOV), set to 1 an overflow occurs 
-d_flip_flop_multi_bit_en #(8, 0) TIFR1 (
+d_flip_flop_multi_bit_en #(8, 0) TIFR0 (
 	.d(TIFR_data_input),
 	.clk(sysClock), 
 	.clr_n(system_reset), 
@@ -92,9 +83,5 @@ d_flip_flop_multi_bit_en #(8, 0) TIFR1 (
 );
 
 assign TIFR_output = TIFR_output_wire;
-assign TCNT1H_output = TCNT_output[15:8];
-assign TCNT1L_output = TCNT_output[7:0];
-assign OCR1AH_output = OCR_output[15:8];
-assign OCR1AL_output = OCR_output[7:0];
 
 endmodule

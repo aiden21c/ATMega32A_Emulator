@@ -35,6 +35,26 @@ stack_pointer stack_pointer(
     .sp(sp)
 );
 
+// Instantiate the Memory Map
+memory_map memory_map (
+	.clk(sysClock),
+
+	.addr(),	//16 bit address	
+	.register_bus(all_registers), //A bus of all 32 GP registers 
+	.IO_bus(), //A bus of all 64 IO registers 
+	
+	.WE(),	//write enable
+	.data_in(),
+	
+	.IO_only(),
+	
+	.Q(),
+	.IO_WE(), 
+	.reg_WE(),
+	.reg_write_addr(), 
+	.write_data()
+);
+
 // Instantiate the Instruction Decoder
 wire [7:0] argument_1;
 wire [7:0] argument_2;
@@ -59,8 +79,11 @@ prog_memory prog_memory(
 	.hold(),
 	.PC_overwrite(),  			// set to overwrite the PC with PC_new  - May need to split this signal to interrupt and other 
 	.PC_new(),
+	.LPM_addr(),
+	.LPM_read(),	// set to read with LPM	
 
 	// Outputs
+	.LPM_data(),
 	.instruction(), 			// The I-reg output 
 	.program_counter(program_counter)			// The PC output
 );
@@ -197,7 +220,7 @@ timer_16bit timer1_16bit(
 	.TIMSK_write_enable(),
 	.TIFR_write_enable(),
 	
-	.clear_count(tifr[5]),					// Used to clear the TCNT0 register to 0
+	.clear_count(tifr[4]),					// Used to clear the TCNT0 register to 0
 	
 	.TCNT1H_output(),				// 8 bit high output for the TCNT register
 	.TCNT1L_output(),				// 8 bit low output for the TCNT register

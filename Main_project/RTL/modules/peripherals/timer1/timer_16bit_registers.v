@@ -80,7 +80,7 @@ d_flip_flop_multi_bit_en #(8, 0) TIMSK1 (
 d_flip_flop_multi_bit #(8,0) TIFR1_input (.d(TIFR_input ^ TIFR_output_wire), .clk(TIFR_write_enable | ~system_reset), .clr_n(system_reset), .Q(TIFR_data_input), .Qn());
 
 // The timer interrupt flag register. A 1 must be written to this register to clear it
-// Bit5 is the Output Compare flag (OCF), set to 1 when a match occurs between OCR and TCNT
+// Bit4 is the Output Compare flag (OCF), set to 1 when a match occurs between OCR and TCNT
 // Bit0 is the timer/counter overflow flag (TOV), set to 1 an overflow occurs 
 d_flip_flop_multi_bit_en #(8, 0) TIFR1 (
 	.d(TIFR_data_input),
