@@ -14,7 +14,8 @@ module memory_map (
 	
 	output [7:0] Q,
 	output [63:0] IO_WE, 
-	output [31:0] reg_WE
+	output [31:0] reg_WE,
+	output [7:0] write_data
 );
 
 reg [7:0] data_out; 
@@ -28,6 +29,7 @@ reg [63:0] IO_enable;
 reg [31:0] reg_enable; 
 assign IO_WE = IO_enable; 
 assign reg_WE = reg_enable;
+assign write_data = data_in;
 
 sram sram0 (
 	.address(sram_addr),
@@ -82,7 +84,7 @@ always @(posedge(clk)) begin
 	//if address is in high section then read from RAM 0x0060-0x085F
 	else begin 
 		sram_addr = addr[10:0]-8'h5F;
-		sram_WE = 1; 
+		sram_WE = WE;
 		reg_enable = 0;
 		IO_enable = 0;
 		data_out = sram_out;
