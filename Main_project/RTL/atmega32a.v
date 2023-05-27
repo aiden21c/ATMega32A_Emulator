@@ -17,7 +17,39 @@ single16MHzPLL single16MHzPLL(
 		.outclk_0(sysClock) 					// outclk0.clk
 );
 
+// Instantiate the Stack Pointer
+wire [15:0] sp;
+stack_pointer stack_pointer(
+    .clk(sysClock),
+    .clr_n(reset_n),
+
+	// Inputs
+    .data_inH(),
+    .data_inL(),
+    .WE_H(),
+	.WE_L(),
+
+	// Outputs
+    .spH(),
+    .spL(),
+    .sp(sp)
+);
+
+// Instantiate the Instruction Decoder
+wire [7:0] argument_1;
+wire [7:0] argument_2;
+wire [7:0] instruction_id;
+instruction_decoder instruction_decoder (
+	.instruction(),
+	.part2(),
+	
+	.instruction_id(instruction_id),	// 0x00 - 0x41 or 0xff if the read is an address for 32 bit instruction
+	.argument_1(argument_1),
+	.argument_2(argument_2)
+);
+
 // Instatiate the program memory
+wire [13:0] program_counter;
 prog_memory prog_memory(
 	.clk(sysClock),
 	.reset_n(reset_n), 			// resets everything
@@ -30,10 +62,42 @@ prog_memory prog_memory(
 
 	// Outputs
 	.instruction(), 			// The I-reg output 
-	.program_counter()			// The PC output
+	.program_counter(program_counter)			// The PC output
 );
 
+// Instatiate the ALU
+wire [7:0] status_register_bus;
+wire [15:0] alu_output;
+ALU ALU (
+	.clk(sysClock),
+	.reset_n(reset_n),
+
+	.mem_write(),
+	.mem_data(),
+
+	.arg1(RD1),
+	.arg2(),
+	
+	.op(),	
+	.use_carry(), // if set will incorporate carry into add, sub and shifts 
+	
+	.Q(alu_output),
+	.sreg(status_register_bus)
+);
+
+// Multiplexer to select specific bits from the status register
+wire sreg_selected_bit;
+multi_bit_multiplexer_8way #(1) status_register (
+	.reg0(status_register_bus[0]), .reg1(status_register_bus[1]), .reg2(status_register_bus[2]), .reg3(status_register_bus[3]), 
+	.reg4(status_register_bus[4]), .reg5(status_register_bus[5]), .reg6(status_register_bus[6]), .reg7(status_register_bus[7]),
+	.S(), .out(sreg_selected_bit)
+);
+
+
 // Instantiate the register file
+wire [7:0] RD1;
+wire [7:0] RD2;
+wire [255:0] all_registers;
 register_file register_file(
 	.clock(sysClock),						// Clock input
 	.clr_n(reset_n),
@@ -46,8 +110,9 @@ register_file register_file(
 	.WD(),							// Write data
 	
 	// Outputs
-	.RD1(),							// Output data read from RA1
-	.RD2()							// Output data read from RA2
+	.RD1(RD1),						// Output data read from RA1
+	.RD2(RD2),							// Output data read from RA2
+	.all_registers(all_registers)				// Bus containing the contents of all registers 31->0
 );
 
 // Instantiate the GPIO for GPIOA and GPIOB
@@ -101,7 +166,7 @@ timer_8bit timer0_8bit(
 	.TIMSK_write_enable(),
 	.TIFR_write_enable(),
 	
-	.clear_count(),				// Used to clear the TCNT0 register to 0
+	.clear_count(tifr[1]),				// Used to clear the TCNT0 register to 0
 	
 	// Outputs
 	.TCNT_output(),				// 8 bit output for the TCNT register
@@ -132,7 +197,7 @@ timer_16bit timer1_16bit(
 	.TIMSK_write_enable(),
 	.TIFR_write_enable(),
 	
-	.clear_count(),					// Used to clear the TCNT0 register to 0
+	.clear_count(tifr[5]),					// Used to clear the TCNT0 register to 0
 	
 	.TCNT1H_output(),				// 8 bit high output for the TCNT register
 	.TCNT1L_output(),				// 8 bit low output for the TCNT register
