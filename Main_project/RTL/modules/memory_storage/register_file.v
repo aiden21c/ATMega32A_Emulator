@@ -10,7 +10,8 @@ module register_file(
 	input [7:0] WD,					// Write data
 	
 	output [7:0] RD1,					// Output data read from RA1
-	output [7:0] RD2					// Output data read from RA2
+	output [7:0] RD2,					// Output data read from RA2
+	output [255:0]all_registers
 );
 
 // Wires connecting the selector to the registers
@@ -148,5 +149,41 @@ multi_bit_multiplexer_32way #(8) RD2_mux(
 // Output D-type flip flops
 d_flip_flop_multi_bit #(8,0) RD1_out (.d(outputData1), .clk(clock), .clr_n(clr_n), .Q(RD1), .Qn());
 d_flip_flop_multi_bit #(8,0) RD2_out (.d(outputData2), .clk(clock), .clr_n(clr_n), .Q(RD2), .Qn());
+
+// Assign the output memory bus
+assign all_registers = {
+	reg31_out,
+	reg30_out,
+	reg29_out,
+	reg28_out,
+	reg27_out,
+	reg26_out,
+	reg25_out,
+	reg24_out,
+	reg23_out,
+	reg22_out,
+	reg21_out,
+	reg20_out,
+	reg19_out,
+	reg18_out,
+	reg17_out,
+	reg16_out,
+	reg15_out,
+	reg14_out,
+	reg13_out,
+	reg12_out,
+	reg11_out,
+	reg10_out,
+	reg9_out,
+	reg8_out,
+	reg7_out,
+	reg6_out,
+	reg5_out,
+	reg4_out,
+	reg3_out,
+	reg2_out,
+	reg1_out,
+	reg0_out
+};
 	
 endmodule
