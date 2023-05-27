@@ -9,10 +9,12 @@ module atmega32a (
 	output [7:0] GPIOB_port		// Output of the PORTB register
 );
 
-// Set up the System Clock for the entire system
+// Set up the 16MHz System Clock for the entire system
 wire sysClock;
-parametised_counter #(2, 1) system_clock16Mhz(							// Set a counter width of 2 and a start count of 1
-	.MR_n(reset_n), .clock50(clock50MHz), .Qn_out(), .clock(sysClock)
+single16MHzPLL single16MHzPLL(
+		.refclk(clock50MHz),   				//  refclk.clk 50MHz
+		.rst(reset_n),      					//   reset.reset
+		.outclk_0(sysClock) 					// outclk0.clk
 );
 
 // Instatiate the program memory
