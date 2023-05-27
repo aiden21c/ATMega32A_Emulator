@@ -14,7 +14,8 @@ module memory_map (
 	
 	output [7:0] Q,
 	output [63:0] IO_WE, 
-	output [31:0] reg_WE,
+	output reg_WE,
+	output [4:0] reg_write_addr, 
 	output [7:0] write_data
 );
 
@@ -26,7 +27,8 @@ reg sram_WE;
 wire [7:0] sram_out;
 
 reg [63:0] IO_enable;
-reg [31:0] reg_enable; 
+reg reg_enable; 
+assign reg_write_addr = addr[4:0];
 assign IO_WE = IO_enable; 
 assign reg_WE = reg_enable;
 assign write_data = data_in;
@@ -63,8 +65,7 @@ always @(posedge(clk)) begin
 		for (i=0; i<32; i=i+1) begin 
 			if(addr == i) begin 
 				data_out = register_bus[i*8 +: 8];
-				if (WE == 1'b1) reg_enable = 32'h1 << i;
-				else reg_enable = 0; 
+				reg_enable = WE;
 			end
 		end
 	end
