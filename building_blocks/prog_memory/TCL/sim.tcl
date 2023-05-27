@@ -11,10 +11,12 @@ proc runSim {} {
    force -freeze PC_new 0
    force -freeze PC_inc 1
    force -freeze hold 0 
+   force -freeze LPM_addr 0
+   force -freeze LPM_read 0
 
    run 200ns
 
    force -freeze reset_n 1
 
-   run 4000ns 
+   run 200ns 
 }
