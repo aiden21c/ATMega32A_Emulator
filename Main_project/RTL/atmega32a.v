@@ -104,7 +104,7 @@ ALU ALU (
 	.reset_n(reset_n),
 
 	.mem_write(MM_IO_we_bus[63]),
-	.mem_data(),
+	.mem_data(MM_write_data),
 
 	.arg1(RD1),
 	.arg2(),
@@ -161,10 +161,10 @@ gpio gpio (
 	
 	// GPIOC inputs and outputs (GPIOA is GPIOC)
 	.DDRA_write_enable(MM_IO_we_bus[20]), 
-	.DDRA_input_data(),
+	.DDRA_input_data(MM_write_data),
 	
 	.PORTA_write_enable(MM_IO_we_bus[21]), 
-	.PORTA_input_data(),
+	.PORTA_input_data(MM_write_data),
 	
 	.PINA_input_data(PINC_input_data),	
 
@@ -174,12 +174,12 @@ gpio gpio (
 	
 	// GPIOB inputs and outputs
 	.DDRB_write_enable(MM_IO_we_bus[23]),
-	.DDRB_input_data(),
+	.DDRB_input_data(MM_write_data),
 	
 	.PORTB_write_enable(MM_IO_we_bus[24]),
-	.PORTB_input_data(),
+	.PORTB_input_data(MM_write_data),
 	
-	.PINB_input_data(),	
+	.PINB_input_data(8'b0),	
 
 	.DDRB_output(DDRB_O),
 	.PORTB_output(PORTB_O),
@@ -196,11 +196,11 @@ timer_8bit timer0_8bit(
 	.sysClock(sysClock),				// The system clock
 	.rst_n(reset_n),
 
-	.TCNT_data(),				// 8 bit input used to update the TCNT0 register with a specified value
-	.OCR_input(),				// 8 bit input used to update the OCR0 register
-	.TCCR_input(),				// 8 bit input used to update the TCCR0 register
-	.TIMSK_input(),				// 8 bit input used to update the TIMSK register
-	.TIFR_input(),				// 8 bit input used to update the TIFR register
+	.TCNT_data(MM_write_data),				// 8 bit input used to update the TCNT0 register with a specified value
+	.OCR_input(MM_write_data),				// 8 bit input used to update the OCR0 register
+	.TCCR_input(MM_write_data),				// 8 bit input used to update the TCCR0 register
+	.TIMSK_input(MM_write_data),				// 8 bit input used to update the TIMSK register
+	.TIFR_input(MM_write_data),				// 8 bit input used to update the TIFR register
 	
 	// Register write enable signals
 	.TCNT_write_enable(MM_IO_we_bus[50]),
@@ -231,16 +231,16 @@ timer_16bit timer1_16bit(
 	.sysClock(sysClock),				// The system clock
 	.rst_n(reset_n),
 
-	.TCNT1H_input(),				// 8 bit input used to update the TCNT1 high register with a specified value
-	.TCNT1L_input(),				// 8 bit input used to update the TCNT1 low register with a specified value
-	.OCR1AH_input(),				// 8 bit input used to update the OCR1 register
-	.OCR1AL_input(),				// 8 bit input used to update the OCR1 register
-	.TCCR_input(),					// 8 bit input used to update the TCCR0 register
-	.TIMSK_input(),					// 8 bit input used to update the TIMSK register
-	.TIFR_input(),
+	.TCNT1H_input(8'b0),				// 8 bit input used to update the TCNT1 high register with a specified value
+	.TCNT1L_input(8'b0),				// 8 bit input used to update the TCNT1 low register with a specified value
+	.OCR1AH_input(MM_write_data),				// 8 bit input used to update the OCR1 register
+	.OCR1AL_input(MM_write_data),				// 8 bit input used to update the OCR1 register
+	.TCCR_input(MM_write_data),					// 8 bit input used to update the TCCR0 register
+	.TIMSK_input(MM_write_data),					// 8 bit input used to update the TIMSK register
+	.TIFR_input(MM_write_data),
 	
 	// Register write enable signals
-	.TCNT_write_enable(),
+	.TCNT_write_enable(1'b0),	// never write to it 
 	.TCCR_write_enable(MM_IO_we_bus[46]),
 	.OCR_write_enable(),
 	.TIMSK_write_enable(MM_IO_we_bus[57]),
