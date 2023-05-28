@@ -3,9 +3,9 @@ module atmega32a (
 	input reset_n,
 	
 	// GPIO Inputs and Outputs
-	input [7:0] PINA_input_data,	// Data read into the PINA register from the GPIO pins
+	input [7:0] PINC_input_data,	// Data read into the PINA register from the GPIO pins
 	
-	output [7:0] GPIOA_port,			// Output of the PORTA register
+	output [7:0] GPIOC_port,			// Output of the PORTA register
 	output [7:0] GPIOB_port		// Output of the PORTB register
 );
 
@@ -38,6 +38,9 @@ stack_pointer stack_pointer(
 );
 
 wire [63:0] MM_IO_we_bus; // 64 bit bus for the write enable signals for the memory map
+wire MM_reg_WE;
+wire [4:0] MM_reg_write_addr;
+wire [7:0] MM_write_data; 
 // Instantiate the Memory Map
 memory_map memory_map (
 	.clk(sysClock),
@@ -53,9 +56,9 @@ memory_map memory_map (
 	
 	.Q(),
 	.IO_WE(MM_IO_we_bus), 
-	.reg_WE(),
-	.reg_write_addr(), 
-	.write_data()
+	.reg_WE(MM_reg_WE),
+	.reg_write_addr(MM_reg_write_addr), 
+	.write_data(MM_write_data)
 );
 
 // Instantiate the Instruction Decoder
@@ -63,7 +66,7 @@ wire [7:0] argument_1;
 wire [7:0] argument_2;
 wire [7:0] instruction_id;
 instruction_decoder instruction_decoder (
-	.instruction(),
+	.instruction(PM_instruction_O),
 	.part2(),
 	
 	.instruction_id(instruction_id),	// 0x00 - 0x41 or 0xff if the read is an address for 32 bit instruction
@@ -73,6 +76,7 @@ instruction_decoder instruction_decoder (
 
 // Instatiate the program memory
 wire [13:0] program_counter;
+wire [15:0] PM_instruction_O; // 16 bit instruction output from the program memory
 prog_memory prog_memory(
 	.clk(sysClock),
 	.reset_n(reset_n), 			// resets everything
@@ -87,7 +91,7 @@ prog_memory prog_memory(
 
 	// Outputs
 	.LPM_data(),
-	.instruction(), 			// The I-reg output 
+	.instruction(PM_instruction_O), 			// The I-reg output 
 	.program_counter(program_counter)			// The PC output
 );
 
@@ -142,31 +146,31 @@ register_file register_file(
 	.all_registers(all_registers)				// Bus containing the contents of all registers 31->0
 );
 
-// Instantiate the GPIO for GPIOA and GPIOB
-wire [7:0] DDRA_O;
+// Instantiate the GPIO for GPIOC and GPIOB
+wire [7:0] DDRC_O;
 wire [7:0] DDRB_O;
-wire [7:0] PORTA_O;
+wire [7:0] PORTC_O;
 wire [7:0] PORTB_O;
-wire [7:0] PINA_O;
+wire [7:0] PINC_O;
 wire [7:0] PINB_O;
-assign GPIOA_port = PORTA_O;
+assign GPIOC_port = PORTC_O;
 assign GPIOB_port = PORTB_O;
 gpio gpio (
 	.clk(sysClock),
 	.clr_n(reset_n),
 	
-	// GPIOA inputs and outputs
-	.DDRA_write_enable(MM_IO_we_bus[26]),
+	// GPIOC inputs and outputs (GPIOA is GPIOC)
+	.DDRA_write_enable(MM_IO_we_bus[20]), 
 	.DDRA_input_data(),
 	
-	.PORTA_write_enable(MM_IO_we_bus[27]),
+	.PORTA_write_enable(MM_IO_we_bus[21]), 
 	.PORTA_input_data(),
 	
-	.PINA_input_data(PINA_input_data),	
+	.PINA_input_data(PINC_input_data),	
 
-	.DDRA_output(DDRA_O),
-	.PORTA_output(PORTA_O),
-	.PINA_output(PINA_O),
+	.DDRA_output(DDRC_O),
+	.PORTA_output(PORTC_O),
+	.PINA_output(PINC_O),
 	
 	// GPIOB inputs and outputs
 	.DDRB_write_enable(MM_IO_we_bus[23]),
@@ -237,7 +241,7 @@ timer_16bit timer1_16bit(
 	
 	// Register write enable signals
 	.TCNT_write_enable(),
-	.TCCR_write_enable(),
+	.TCCR_write_enable(MM_IO_we_bus[46]),
 	.OCR_write_enable(),
 	.TIMSK_write_enable(MM_IO_we_bus[57]),
 	.TIFR_write_enable(MM_IO_we_bus[56]),
@@ -260,16 +264,15 @@ wire TIMSK_O = timsk_timer0_O | timsk_timer1_O;
 // Wire for IO bus for memory map 
 wire [511:0] IO_cat_bus = {
 	SREG_O, SPH_O, SPL_O, OCR0_O,
-	16'B0, 
+	16'B0, // 2 registers 
 	TIMSK_O, TIFR_O,
-	32'B0,
+	32'B0,	// 4 registers 
 	TCCR0_O, TCNT0_O,
-	16'B0,
-	TCCR1_O, TCCR1_O, TCNT1H_O, TCNT1L_O, OCR1AH_O, OCR1AL_O, // FIX TCCR1 FOR A AND B
-	112'B0, 
-	PORTA_O, DDRA_O, PINA_O, PORTB_O, DDRB_O, PINB_O, 
-	PORTA_O, DDRA_O, PINA_O, PORTB_O, DDRB_O, PINB_O, // FIX TO GPIOC AND GPIOD
-	128'B0
+	24'B0,	// 3 registers 
+	TCCR1_O, TCNT1H_O, TCNT1L_O, OCR1AH_O, OCR1AL_O, // FIX TCCR1 FOR A AND B
+	136'B0, // 17 registers 
+	PORTB_O, DDRB_O, PINB_O, PORTC_O, DDRC_O, PINC_O, 
+	152'B0	// 19 registers 
 };
 
 endmodule
