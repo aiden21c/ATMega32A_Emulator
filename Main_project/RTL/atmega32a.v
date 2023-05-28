@@ -11,11 +11,12 @@ module atmega32a (
 
 // Set up the 16MHz System Clock for the entire system
 wire sysClock;
-single16MHzPLL single16MHzPLL(
-	.refclk(clock50MHz),   				//  refclk.clk 50MHz
-	.rst(reset_n),      					//   reset.reset
-	.outclk_0(sysClock) 					// outclk0.clk
-);
+assign  sysClock = clock50MHz;
+//single16MHzPLL single16MHzPLL(
+//	.refclk(clock50MHz),   				//  refclk.clk 50MHz
+//	.rst(reset_n),      					//   reset.reset
+//	.outclk_0(sysClock) 					// outclk0.clk
+//);
 
 //********************************************************************************************************************************
 // Instantiate the control unit
@@ -35,6 +36,7 @@ wire [1:0] INTERRUPT_STAGE;
 
 control_unit control_unit(
     .clk(sysClock),
+	 .reset_n(reset_n),
 
     .instruction_id(instruction_id),
     .status_register(SREG_O),
@@ -207,7 +209,7 @@ multi_bit_multiplexer_4way #(14) PM_PC_new_mux (
 // Instatiate the program memory
 wire [13:0] program_counter;
 wire [15:0] PM_instruction_O; // 16 bit instruction output from the program memory
-wire [8:0] PM_LPM_O;
+wire [7:0] PM_LPM_O;
 prog_memory prog_memory(
 	.clk(sysClock),
 	.reset_n(reset_n), 			// resets everything
