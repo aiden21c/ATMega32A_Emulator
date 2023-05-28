@@ -131,24 +131,19 @@ d_flip_flop_multi_bit #(8,0) register30 (.d(reg30_in), .clk(clock), .clr_n(clr_n
 d_flip_flop_multi_bit #(8,0) register31 (.d(reg31_in), .clk(clock), .clr_n(clr_n), .Q(reg31_out), .Qn());
 
 // Multiplexers used to select the relevant read addresses for the outputs
-wire [7:0] outputData1; wire [7:0] outputData2;
 multi_bit_multiplexer_32way #(8) RD1_mux(
 	.reg0(reg0_out), .reg1(reg1_out), .reg2(reg2_out), .reg3(reg3_out), .reg4(reg4_out), .reg5(reg5_out), .reg6(reg6_out), .reg7(reg7_out), .reg8(reg8_out), .reg9(reg9_out), .reg10(reg10_out), 
 	.reg11(reg11_out), .reg12(reg12_out), .reg13(reg13_out), .reg14(reg14_out), .reg15(reg15_out), .reg16(reg16_out), .reg17(reg17_out), .reg18(reg18_out), .reg19(reg19_out), .reg20(reg20_out), .reg21(reg21_out), 
 	.reg22(reg22_out), .reg23(reg23_out), .reg24(reg24_out), .reg25(reg25_out), .reg26(reg26_out), .reg27(reg27_out), .reg28(reg28_out), .reg29(reg29_out), .reg30(reg30_out), .reg31(reg31_out),
-	.S(RA1), .out(outputData1)
+	.S(RA1), .out(RD1)
 );
 
 multi_bit_multiplexer_32way #(8) RD2_mux(
 	.reg0(reg0_out), .reg1(reg1_out), .reg2(reg2_out), .reg3(reg3_out), .reg4(reg4_out), .reg5(reg5_out), .reg6(reg6_out), .reg7(reg7_out), .reg8(reg8_out), .reg9(reg9_out), .reg10(reg10_out), 
 	.reg11(reg11_out), .reg12(reg12_out), .reg13(reg13_out), .reg14(reg14_out), .reg15(reg15_out), .reg16(reg16_out), .reg17(reg17_out), .reg18(reg18_out), .reg19(reg19_out), .reg20(reg20_out), .reg21(reg21_out), 
 	.reg22(reg22_out), .reg23(reg23_out), .reg24(reg24_out), .reg25(reg25_out), .reg26(reg26_out), .reg27(reg27_out), .reg28(reg28_out), .reg29(reg29_out), .reg30(reg30_out), .reg31(reg31_out),
-	.S(RA2), .out(outputData2)
+	.S(RA2), .out(RD2)
 );
-
-// Output D-type flip flops
-d_flip_flop_multi_bit #(8,0) RD1_out (.d(outputData1), .clk(clock), .clr_n(clr_n), .Q(RD1), .Qn());
-d_flip_flop_multi_bit #(8,0) RD2_out (.d(outputData2), .clk(clock), .clr_n(clr_n), .Q(RD2), .Qn());
 
 // Assign the output memory bus
 assign all_registers = {

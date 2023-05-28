@@ -560,11 +560,24 @@ begin
         interrupt_stage <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00101001)			// OUT (1 cycle)
+	else if(instruction_id == 8'b00101001)			// OUT (2 cycle)
     // 1	0	0	0	000	0	0	0	1
 	begin       
-        clock_counter <= 2'b00;		
-        interrupt_stage <= 2'b00;	
+        if (clock_counter == 2'b00)
+        begin 
+            clock_counter <= 2'b01;		
+            interrupt_stage <= 2'b00;
+        end
+        else if (clock_counter == 2'b01)
+        begin 
+            clock_counter <= 2'b00;		
+            interrupt_stage <= 2'b00;
+        end
+        else 
+        begin 
+            clock_counter <= 2'b00;		
+            interrupt_stage <= 2'b00;
+        end
 	end
 
 	else if(instruction_id == 8'b00101010)			// POP (2 cycles)
@@ -943,9 +956,8 @@ begin
 
         end
     end 
-    else if ((OC_flag == 1'b1) && (status_register[I] == 2'b00) && (clock_counter == 2'b00)) 
+    else if ((OC_flag == 1'b1) && (status_register[I] == 1'b0) && (clock_counter == 2'b00)) 
     begin // handle interrupt
-        interrupt_stage <= 2'b01; //set stage to 1 
         // clear I bit 
         pc_inc <= 1'b0;
         ireg_hold <= 1'b0;
@@ -1885,19 +1897,48 @@ begin
         sp_write_enable <= 1'b0;	
 	end
 
-	else if(instruction_id == 8'b00101001)			// OUT (1 cycle)
+	else if(instruction_id == 8'b00101001)			// OUT (2 cycle)
     // 1	0	0	0	000	0	0	0	1
 	begin
-        pc_inc <= 1'b1;
-        ireg_hold <= 1'b0;
-        pc_overwrite <= 1'b0;
-        gp_reg_write <= 1'b0;
-        alu_sel <= 3'b000;
-        use_carry <= 1'b0;
-        status_reg_sel <= 1'b0;
-        io_only_flag <= 1'b0;
-        memory_write_en <= 1'b1;
-        sp_write_enable <= 1'b0;			
+        if (clock_counter == 2'b00)
+        begin 
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b1;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b0;
+        end
+        else if (clock_counter == 2'b01)
+        begin 
+            pc_inc <= 1'b1;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b1;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b0;
+        end		
+        else 
+        begin 
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+        end	
 	end
 
 	else if(instruction_id == 8'b00101010)			// POP (2 cycles)
