@@ -15,8 +15,8 @@ input [WIDTH-1:0] D;
 input [1:0] S;
 output [WIDTH-1:0] out;
 
-wire m1out;
-wire m2out;
+wire [WIDTH-1:0] m1out;
+wire [WIDTH-1:0] m2out;
 
 multi_bit_multiplexer_2way #(WIDTH) m1 (.A(A), .B(C), .S(S[0]), .out(m1out));
 multi_bit_multiplexer_2way #(WIDTH) m2 (.A(B), .B(D), .S(S[0]), .out(m2out));
