@@ -134,18 +134,18 @@ stack_pointer stack_pointer (
 wire [15:0] MM_address_selected;
 wire [15:0] MM_address_mux_A = all_registers[239:224]; // Y reg
 wire [15:0] MM_address_mux_B = {8'b0, argument_2};	// 8 bit argument 2
-wire [15:0] MM_address_mux_D = {SP[15:8], alu_output}; // 16 bit stack pointer
+wire [15:0] MM_address_mux_D = {sp[15:8], alu_output[7:0]}; // 16 bit stack pointer
 
 multi_bit_multiplexer_8way #(16) MM_address_mux (
-	.REG0(MM_address_mux_A), .REG1(MM_address_mux_B), .REG2(sp), .REG3(MM_address_mux_D), 
-	.REG4(16'h3F), .REG5(16'h0), .REG6(16'h0), REG7(16'h0), 
+	.reg0(MM_address_mux_A), .reg1(MM_address_mux_B), .reg2(sp), .reg3(MM_address_mux_D), 
+	.reg4(16'h3F), .reg5(16'h0), .reg6(16'h0), .reg7(16'h0), 
 	.S(MM_addr_sel), .out(MM_address_selected)
 );
 
 // mux for data in 
 // can come from reg file, PCL or PCH, or from SREG toggle I
 wire [7:0] MM_data_in_selected;
-wire [7:0] MM_PCH = {2'b0, PC[13:8]};
+wire [7:0] MM_PCH = {2'b0, program_counter[13:8]};
 wire [7:0] MM_SREG_I = {(SREG_O[7]^1'b1), SREG_O[6:0]};
 
 multi_bit_multiplexer_4way #(8) MM_data_in_mux (
@@ -238,7 +238,7 @@ multi_bit_multiplexer_4way #(8) ALU_arg2 (
 // ALU argument 1 selection
 // comes from either RD1 or SP
 multi_bit_multiplexer_2way #(8) ALU_arg1 (
-	.A(RD1), .B(SP[7:0]), .S(ALU_arg1_sel), .out(ALU_arg1_selected)
+	.A(RD1), .B(sp[7:0]), .S(ALU_arg1_sel), .out(ALU_arg1_selected)
 );
 
 // Instatiate the ALU
@@ -282,8 +282,8 @@ multi_bit_multiplexer_2way #(8) RegFile_WA_mux (
 // can come from ALU, memory map data, decoder argument or LPM output 
 wire [7:0] RF_WD_selected;
 multi_bit_multiplexer_8way #(8) RegFile_WD_mux (
-	.REG0(alu_output), .REG1(MM_write_data), .REG2(argument_2), .REG3(PM_LPM_O), 
-	.REG4(MM_Q_O), .REG5(8'h0), .REG6(8'h0), .REG7(8'h0),
+	.reg0(alu_output), .reg1(MM_write_data), .reg2(argument_2), .reg3(PM_LPM_O), 
+	.reg4(MM_Q_O), .reg5(8'h0), .reg6(8'h0), .reg7(8'h0),
 	.S(RF_WD_sel), .out(RF_WD_selected)
 );
 

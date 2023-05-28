@@ -52,16 +52,8 @@ set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_RO
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_location_assignment PIN_AA19 -to PINA_input_data[7]
-set_location_assignment PIN_Y19 -to PINA_input_data[6]
-set_location_assignment PIN_AC23 -to PINA_input_data[5]
-set_location_assignment PIN_C12 -to PINA_input_data[4]
 set_location_assignment PIN_V11 -to clock50MHz
 set_location_assignment PIN_Y24 -to reset_n
-set_location_assignment PIN_D12 -to GPIOA_port[3]
-set_location_assignment PIN_AD23 -to GPIOA_port[2]
-set_location_assignment PIN_AE23 -to GPIOA_port[1]
-set_location_assignment PIN_AD5 -to GPIOA_port[0]
 set_location_assignment PIN_AA23 -to GPIOB_port[7]
 set_location_assignment PIN_Y16 -to GPIOB_port[6]
 set_location_assignment PIN_AE26 -to GPIOB_port[5]
@@ -70,18 +62,6 @@ set_location_assignment PIN_V15 -to GPIOB_port[3]
 set_location_assignment PIN_V16 -to GPIOB_port[2]
 set_location_assignment PIN_AA24 -to GPIOB_port[1]
 set_location_assignment PIN_W15 -to GPIOB_port[0]
-set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINA_input_data[7]
-set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINA_input_data[6]
-set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINA_input_data[5]
-set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINA_input_data[4]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINA_input_data[7]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINA_input_data[6]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINA_input_data[5]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINA_input_data[4]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOA_port[3]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOA_port[2]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOA_port[1]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOA_port[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port[5]
@@ -91,45 +71,61 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port[2]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port[1]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOB_port
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINA_input_data[7]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINA_input_data[6]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINA_input_data[5]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINA_input_data[4]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clock50MHz
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to reset_n
-set_global_assignment -name VERILOG_FILE RTL/modules/control_block/control_unit_2.v
-set_global_assignment -name VERILOG_FILE RTL/modules/control_block/control_unit.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/clockSelector.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer1/timer_control_unit1.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer1/timer_16bit_registers.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer1/timer_16bit.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer0/timer0registers.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer0/timer_control_unit0.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/timer0/timer_8bit.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/gpio/gpio_registers.v
-set_global_assignment -name VERILOG_FILE RTL/modules/peripherals/gpio/gpio.v
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/stack_pointer.v
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/sram_bb.v
-set_global_assignment -name QIP_FILE RTL/modules/memory_storage/sram_bb.qip
-set_global_assignment -name QIP_FILE RTL/modules/memory_storage/sram.qip
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/register_file.v
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/prog_memory.v
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/memory_map.v
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/instruction_decoder.v
-set_global_assignment -name VERILOG_FILE RTL/modules/memory_storage/dual_ROM.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/selector_32way.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_32way.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_8way.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_4way.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/multiplexers/multi_bit_multiplexer_2way.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/latches_flipflops/d_flip_flop_multi_bit_en.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/latches_flipflops/d_flip_flop_multi_bit.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/arithmetic/fullAdder.v
-set_global_assignment -name VERILOG_FILE RTL/building_blocks/arithmetic/ALU.v
-set_global_assignment -name HEX_FILE resources/mem.hex
-set_global_assignment -name HEX_FILE resources/ASMprogram.hex
-set_global_assignment -name QIP_FILE ip/SRAM/sram.qip
+set_location_assignment PIN_D12 -to GPIOC_port[3]
+set_location_assignment PIN_AD23 -to GPIOC_port[2]
+set_location_assignment PIN_AE23 -to GPIOC_port[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOC_port[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOC_port[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOC_port[1]
+set_location_assignment PIN_AD5 -to GPIOC_port[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIOC_port[0]
+set_location_assignment PIN_AA19 -to PINC_input_data[7]
+set_location_assignment PIN_Y19 -to PINC_input_data[6]
+set_location_assignment PIN_AC23 -to PINC_input_data[5]
+set_location_assignment PIN_C12 -to PINC_input_data[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINC_input_data[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINC_input_data[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINC_input_data[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PINC_input_data[4]
+set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINC_input_data[7]
+set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINC_input_data[6]
+set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINC_input_data[5]
+set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY OFF -to PINC_input_data[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINC_input_data[7]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINC_input_data[6]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINC_input_data[5]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PINC_input_data[4]
+set_global_assignment -name VERILOG_FILE RTL/timer0registers.v
+set_global_assignment -name VERILOG_FILE RTL/timer_control_unit1.v
+set_global_assignment -name VERILOG_FILE RTL/timer_control_unit0.v
+set_global_assignment -name VERILOG_FILE RTL/timer_16bit_registers.v
+set_global_assignment -name VERILOG_FILE RTL/timer_16bit.v
+set_global_assignment -name VERILOG_FILE RTL/timer_8bit.v
+set_global_assignment -name VERILOG_FILE RTL/stack_pointer.v
+set_global_assignment -name VERILOG_FILE RTL/selector_32way.v
+set_global_assignment -name VERILOG_FILE RTL/register_file.v
+set_global_assignment -name VERILOG_FILE RTL/prog_memory.v
+set_global_assignment -name VERILOG_FILE RTL/multi_bit_multiplexer_32way.v
+set_global_assignment -name VERILOG_FILE RTL/multi_bit_multiplexer_8way.v
+set_global_assignment -name VERILOG_FILE RTL/multi_bit_multiplexer_4way.v
+set_global_assignment -name VERILOG_FILE RTL/multi_bit_multiplexer_2way.v
+set_global_assignment -name VERILOG_FILE RTL/memory_map.v
+set_global_assignment -name VERILOG_FILE RTL/instruction_decoder.v
+set_global_assignment -name VERILOG_FILE RTL/gpio_registers.v
+set_global_assignment -name VERILOG_FILE RTL/gpio.v
+set_global_assignment -name VERILOG_FILE RTL/fullAdder.v
+set_global_assignment -name VERILOG_FILE RTL/dual_ROM.v
+set_global_assignment -name VERILOG_FILE RTL/d_flip_flop_multi_bit_en.v
+set_global_assignment -name VERILOG_FILE RTL/d_flip_flop_multi_bit.v
+set_global_assignment -name VERILOG_FILE RTL/control_unit_2.v
+set_global_assignment -name VERILOG_FILE RTL/control_unit.v
+set_global_assignment -name VERILOG_FILE RTL/control_mux.v
+set_global_assignment -name VERILOG_FILE RTL/clockSelector.v
 set_global_assignment -name VERILOG_FILE RTL/atmega32a.v
+set_global_assignment -name VERILOG_FILE RTL/ALU.v
 set_global_assignment -name QIP_FILE ip/PLL/single16MHzPLL.qip
 set_global_assignment -name SIP_FILE ip/PLL/single16MHzPLL.sip
+set_global_assignment -name QIP_FILE ip/SRAM/sram.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

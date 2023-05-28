@@ -16,14 +16,13 @@
 	rjmp TIMER1_COMPA_ISR
 
 start:
-	cli 
     ldi temp, SP
 	out 0x3D, temp
 
-	call initGPIO
-	call initTimer1
+	rcall initGPIO
+	rcall initTimer1
 	sei 
-	jmp loop
+	rjmp loop
 
 initGPIO:	; sets up the config for the program
 	LDI TEMP, 0xF0
@@ -60,12 +59,12 @@ initTimer1:
 
 loop:
 	; check for key press 
-	call ReadKey
+	rcall ReadKey
 	; if not 0xFF then checkKP
 	ldi temp, 0xFF
 	cpse KPret, temp	; compare and skip if equal
-	call checkKP
-    jmp loop
+	rcall checkKP
+    rjmp loop
 
 checkKP:
 	; if a number then enter into ram and inc ramPrt
@@ -82,7 +81,8 @@ checkKP:
 
 gotNum:
 	; push to ram and inc pointer
-	st Y+, kpRet
+	st Y, kpRet
+	inc YL
 	ret
 
 changeFreq:	; r16 = temp, r17 = ram counter, r18 = total_low, r19 = total_high
@@ -99,7 +99,8 @@ changeFreq:	; r16 = temp, r17 = ram counter, r18 = total_low, r19 = total_high
 	out TCCR1B, temp
 	ret
 changeFreqLoop:
-	ld temp, -Y
+	dec YL
+	ld temp, Y
 	mul temp, r17
 	; add r1/r0 to total count
 	add r18, r0
@@ -117,7 +118,7 @@ changeFreqLoop:
 	ldi temp, 0x08
 	out TCCR1B, temp
 	; update OCR
-	call OCRdiv
+	rcall OCRdiv
 	; start timer
 	ldi temp, 0x0C
 	out TCCR1B, temp
@@ -169,13 +170,13 @@ back:
 	RET
 Zoverflow:
 	INC ZH
-	JMP back
+	RJMP back
 
 debounce:
 	in temp, pinc
 	cp r18, temp
 	breq debounce
-	jmp findKey
+	RJMP findKey
 
 OCRdiv: ;62500/(r18 and r19) and sets OCR
 	push r20
@@ -248,8 +249,7 @@ L2:
 	POP R16
     RET
 
-TIMER1_COMPA_ISR:
-	cli 
+TIMER1_COMPA_ISR: 
 	push temp
 	;clear timer finish bit 
 	in temp, TIFR
@@ -263,7 +263,6 @@ TIMER1_COMPA_ISR:
 ledOut:
 	out PORTB, temp
 	pop temp
-	sei 
 	reti
 
 codes:
