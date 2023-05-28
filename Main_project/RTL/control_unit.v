@@ -1922,8 +1922,8 @@ begin
             alu_sel <= 3'b000;
             use_carry <= 1'b0;
             status_reg_sel <= 1'b0;
-            io_only_flag <= 1'b1;
-            memory_write_en <= 1'b1;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
             sp_write_enable <= 1'b0;
         end		
         else 
