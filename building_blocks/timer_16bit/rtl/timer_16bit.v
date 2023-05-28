@@ -96,5 +96,4 @@ timer_16bit_registers timer_16bit_registers(
 	.TIFR_output(TIFR_output)				// 8 bit output for the TIFR register
 );
 
-
 endmodule

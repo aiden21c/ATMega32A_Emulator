@@ -10,7 +10,8 @@ module timer_16bit_registers(
 	
 	// Write enable signals for the timer registers
 	input TCCR_write_enable,
-	input OCR_write_enable,
+	input OCR1_write_enable,
+	input OCR2_write_enable,
 	input TIMSK_write_enable,
 	input TIFR_write_enable,
 	
@@ -30,9 +31,7 @@ wire [7:0] TIFR_output_wire;
 wire [7:0] TIFR_data_input;
 
 wire [15:0] TCNT_input = (TCNT1H_input << 8) | TCNT1L_input;
-wire [15:0] OCR_input = (OCR1AH_input << 8) | OCR1AL_input;
 wire [15:0] TCNT_output;
-wire [15:0] OCR_output;
 
 // The register used to store the current timer value
 d_flip_flop_multi_bit_en #(16, 0) TCNT1 (
@@ -57,12 +56,20 @@ d_flip_flop_multi_bit_en #(8, 0) TCCR1B (
 );
 
 // The output control register. Used to compare all 8 bits of this register to the value within TCNT0
-d_flip_flop_multi_bit_en #(16, 0) OCR1 (
-	.d(OCR_input), 
+d_flip_flop_multi_bit_en #(8, 0) OCR1 (
+	.d(OCR1AH_input), 
 	.clk(sysClock), 
 	.clr_n(system_reset), 
-	.enable(OCR_write_enable),
-	.Q(OCR_output), 
+	.enable(OCR1_write_enable),
+	.Q(OCR1AH_output), 
+	.Qn()
+);
+d_flip_flop_multi_bit_en #(8, 0) OCR2 (
+	.d(OCR1AL_input), 
+	.clk(sysClock), 
+	.clr_n(system_reset), 
+	.enable(OCR2_write_enable),
+	.Q(OCR1AL_output), 
 	.Qn()
 );
 
@@ -94,7 +101,5 @@ d_flip_flop_multi_bit_en #(8, 0) TIFR1 (
 assign TIFR_output = TIFR_output_wire;
 assign TCNT1H_output = TCNT_output[15:8];
 assign TCNT1L_output = TCNT_output[7:0];
-assign OCR1AH_output = OCR_output[15:8];
-assign OCR1AL_output = OCR_output[7:0];
 
 endmodule
