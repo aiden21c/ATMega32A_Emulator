@@ -1,0 +1,66 @@
+﻿NOP
+ADC
+ADD
+AND
+BRCC
+BRCS
+BREQ
+BRLO
+BRNE
+CALL
+CLI
+CLR
+CP
+CPI
+CPSE
+DEC
+EOR
+IN
+INC
+JMP
+LD (X)
+LD(X) - i
+LD(X) - ii
+LD(X) - iii
+LD (Y)
+LD(Y) - i
+LD(Y) - ii
+LD(Y) - iii
+LD (Z)
+LD(Z) - i
+LD(Z) - ii
+LD(Z) - iii
+LDI
+LDS
+LPM
+LSL
+LSR
+MOV
+MUL
+OR
+ORI
+OUT
+POP
+PUSH
+RCALL
+RET
+RETI
+RJMP
+ROL
+ROR
+SEI
+ST (X)
+ST(X) - i
+ST(X) - ii
+ST(X) - iii
+ST (Y)
+ST(Y) - i
+ST(Y) - ii
+ST(Y) - iii
+ST (Z)
+ST(Z) - i
+ST(Z) - ii
+ST(Z) - iii
+STS
+SUB
+SUBI

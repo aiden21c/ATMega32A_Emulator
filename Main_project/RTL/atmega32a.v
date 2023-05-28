@@ -17,6 +17,19 @@ single16MHzPLL single16MHzPLL(
 		.outclk_0(sysClock) 					// outclk0.clk
 );
 
+// Stack pointer in multiplexers 
+// either from ALU (+/- 1) or from memory map when writing to SPH or SPL
+wire [7:0] SP_inH_selected;
+wire [7:0] SP_inL_selected;
+
+multi_bit_multiplexer_2way #(8) SP_inH_mux (
+	.A(alu_output[7:0]), .B(MM_write_data), .S(), .out(SP_inH_selected)
+);
+
+multi_bit_multiplexer_2way #(8) SP_inL_mux (
+	.A(alu_output[7:0]), .B(MM_write_data), .S(), .out(SP_inL_selected)
+);
+
 // Instantiate the Stack Pointer
 wire [15:0] sp;
 wire [7:0] SPH_O;
@@ -26,8 +39,8 @@ stack_pointer stack_pointer(
     .clr_n(reset_n),
 
 	// Inputs
-    .data_inH(),
-    .data_inL(),
+    .data_inH(SP_inH_selected),
+    .data_inL(SP_inL_selected),
     .WE_H(MM_IO_we_bus[62]),
 	.WE_L(MM_IO_we_bus[61]),
 
@@ -37,24 +50,33 @@ stack_pointer stack_pointer(
     .sp(sp)
 );
 
+// multiplexer for MM address selection
+// Can come from Y reg on register file or from decoder arguments or from SP
+wire [15:0] MM_address_selected;
+
+multi_bit_multiplexer_3way #(16) MM_address_mux (
+	.A(all_registers[239:224]), .B({8'b0, argument_2}), .C(sp), .S(), .out(MM_address_selected)
+);
+
 wire [63:0] MM_IO_we_bus; // 64 bit bus for the write enable signals for the memory map
 wire MM_reg_WE;
 wire [4:0] MM_reg_write_addr;
 wire [7:0] MM_write_data; 
+wire [7:0] MM_Q_O; // 8 bit output from the memory map
 // Instantiate the Memory Map
 memory_map memory_map (
 	.clk(sysClock),
 
-	.addr(),	//16 bit address	
+	.addr(MM_address_selected),	//16 bit address	
 	.register_bus(all_registers), //A bus of all 32 GP registers 
 	.IO_bus(IO_cat_bus), //A bus of all 64 IO registers 
 	
 	.WE(),	//write enable
-	.data_in(),
+	.data_in(RD1),
 	
 	.IO_only(),
 	
-	.Q(),
+	.Q(MM_Q_O),
 	.IO_WE(MM_IO_we_bus), 
 	.reg_WE(MM_reg_WE),
 	.reg_write_addr(MM_reg_write_addr), 
@@ -74,9 +96,18 @@ instruction_decoder instruction_decoder (
 	.argument_2(argument_2)
 );
 
+// mux for PC_new
+// can come from interrupt trigger, decoder argument, from the controller (call/Ret) 
+wire [13:0] PM_PC_new_selected;
+
+multi_bit_multiplexer_4way #(14) PM_PC_new_mux (
+	.A(14'h00E), .B(argument_1), .C(), .D(), .S(), .out(PM_PC_new_selected)
+);
+
 // Instatiate the program memory
 wire [13:0] program_counter;
 wire [15:0] PM_instruction_O; // 16 bit instruction output from the program memory
+wire [8:0] PM_LPM_O
 prog_memory prog_memory(
 	.clk(sysClock),
 	.reset_n(reset_n), 			// resets everything
@@ -85,14 +116,21 @@ prog_memory prog_memory(
 	.PC_inc(),			//set by control unit when I reg changes 
 	.hold(),
 	.PC_overwrite(),  			// set to overwrite the PC with PC_new  - May need to split this signal to interrupt and other 
-	.PC_new(),
-	.LPM_addr(),
+	.PC_new(PM_PC_new_selected),
+	.LPM_addr(all_registers[254:240]), // Z register hard coded 
 	.LPM_read(),	// set to read with LPM	
 
 	// Outputs
-	.LPM_data(),
+	.LPM_data(PM_LPM_O),
 	.instruction(PM_instruction_O), 			// The I-reg output 
 	.program_counter(program_counter)			// The PC output
+);
+
+// Multiplexer for ALU arg 2 selection 
+// From register file output 2 or from arg2 of instruction decoder
+wire [7:0] ALU_arg2_selected;
+multi_bit_multiplexer_2way #(8) ALU_arg2 (
+	.A(RD2), .B(argument_2), .S(), .out(ALU_arg2_selected)
 );
 
 // Instatiate the ALU
@@ -107,7 +145,7 @@ ALU ALU (
 	.mem_data(MM_write_data),
 
 	.arg1(RD1),
-	.arg2(),
+	.arg2(ALU_arg2_selected),
 	
 	.op(),	
 	.use_carry(), // if set will incorporate carry into add, sub and shifts 
