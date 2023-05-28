@@ -193,12 +193,12 @@ always @(*) begin
 	else if (n3 == 4'b1001 && n2[3:1] == 3'b000 && n0 == 4'b1111) begin // POP
 		id = 8'h2a;
 		arg1 = {3'b000, n2[0], n1};	// Rd
-		arg2 = 8'b0;
+		arg2 = 8'b1; // for SP inc
 	end
 	else if (n3 == 4'b1001 && n2[3:1] == 3'b001 && n0 == 4'b1111) begin // PUSH
 		id = 8'h2b;
 		arg1 = {3'b000, n2[0], n1};	// Rd
-		arg2 = 8'b0;
+		arg2 = 8'b1; // for SP dec
 	end
 	else if (n3 == 4'b1101) begin // RCALL
 		id = 8'h2c;
