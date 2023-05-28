@@ -12,11 +12,11 @@ output [WIDTH-1:0] out;
 
 reg [WIDTH-1:0] o;
 
-always @(A, B, S)
+always @(A, B, S) begin 
 	if(S == 0)
 		o = A;
 	else 
 		o = B;
-
+end 
 assign out = o;
 endmodule

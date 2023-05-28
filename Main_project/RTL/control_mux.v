@@ -17,7 +17,7 @@ module control_mux(
 );
 
 // SP_inL_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    if (reset_n == 1'b0) SP_inL_sel <= 1'b0; 
    else if(instruction_id == 8'h29 || instruction_id == 8'h38) SP_inL_sel <= 1'b1;
@@ -25,7 +25,7 @@ begin
 end
 
 // MM_addr_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = Y reg - for LD/ST
    // 1 = decoder arg2 - for IN/OUT
@@ -42,7 +42,7 @@ begin
 end
 
 // MM_data_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = RD1 - for LD/ST and OUT
    // 1 = PC_low - for rcall and interrupt
@@ -59,7 +59,7 @@ begin
 end
 
 // PM_PC_new_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = interrupt - set in last interrupt stage 
    // 1 = decoder arg1 - for branches 
@@ -72,7 +72,7 @@ begin
 end
 
 // ALU_arg2_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = RD2 
    // 1 = arg 2 decoder - for subi and cpi
@@ -86,27 +86,27 @@ begin
 end
 
 // ALU_arg1_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = RD1
    // 1 = SPL - for push/pop/rcall/ret/reti
    if (reset_n == 1'b0) ALU_arg1_sel <= 1'b0; 
    else if (instruction_id == 8'h2B || instruction_id == 8'h2C || instruction_id == 8'h2D || instruction_id == 8'h2E || instruction_id == 8'h2C) ALU_arg1_sel <= 1'b1;
-   else ALU_arg1_sel <= 1'b0;  
+   else ALU_arg1_sel = 1'b0;  
 end
 
 // RF_WA_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = arg1 decoder 
    // 1 = MM address // for LD/ST
-   if (reset_n == 1'b0) RF_WA_sel <= 1'b0;
-   else if (instruction_id == 8'h19 || instruction_id == 8'h38) RF_WA_sel <= 1'b1;
-   else RF_WA_sel <= 1'b0;
+   if (reset_n == 1'b0) RF_WA_sel = 1'b0;
+   else if (instruction_id == 8'h19 || instruction_id == 8'h38) RF_WA_sel = 1'b1;
+   else RF_WA_sel = 1'b0;
 end
 
 // RF_WD_sel
-always @(posedge(clk), negedge(reset_n)) 
+always @(*) 
 begin
    // 0 = ALU output
    // 1 = MM data // for ST
@@ -114,10 +114,10 @@ begin
    // 3 = PM LPM - for lpm
    // 4 = MM Q for LD 
    if (reset_n == 1'b0) RF_WD_sel <= 3'b000;
-   else if (instruction_id == 8'h38) RF_WD_sel <= 3'b001;
-   else if (instruction_id == 8'h20) RF_WD_sel <= 3'b010;
-   else if (instruction_id == 8'h22) RF_WD_sel <= 3'b011;
-   else if (instruction_id == 8'h19) RF_WD_sel <= 3'b100;
+   else if (instruction_id == 8'h38) RF_WD_sel = 3'b001;
+   else if (instruction_id == 8'h20) RF_WD_sel = 3'b010;
+   else if (instruction_id == 8'h22) RF_WD_sel = 3'b011;
+   else if (instruction_id == 8'h19) RF_WD_sel = 3'b100;
    else RF_WD_sel <= 3'b000;   
 end
 

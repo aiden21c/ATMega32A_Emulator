@@ -36,9 +36,9 @@ wire [WIDTH-1:0] PORTx_input_wire;
 multi_bit_multiplexer_2way #(WIDTH) PORTx_input_selector (.A(PORTx_output), .B(PORTx_input_data & DDRx_output), .S(PORTx_write_enable), .out(PORTx_input_wire));
 
 // The PORT (output) regsiter
-d_flip_flop_multi_bit #(WIDTH, DDRx_default) PORTx (.d(PORTx_input_wire), .clk(clk), .clr_n(clr_n), .Q(PORTx_output), .Qn());
+d_flip_flop_multi_bit #(WIDTH, 0) PORTx (.d(PORTx_input_wire), .clk(clk), .clr_n(clr_n), .Q(PORTx_output), .Qn());
 
 // The PIN (input) register
-d_flip_flop_multi_bit #(WIDTH, DDRx_default) PINx (.d(PINx_input_data & ~(DDRx_output)), .clk(clk), .clr_n(clr_n), .Q(PINx_output), .Qn());
+d_flip_flop_multi_bit #(WIDTH, 0) PINx (.d(PINx_input_data & ~(DDRx_output)), .clk(clk), .clr_n(clr_n), .Q(PINx_output), .Qn());
 
 endmodule

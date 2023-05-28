@@ -113,7 +113,7 @@ always @(*) begin
 	else if (n3 == 4'b1011 && n2[3] == 1'b0) begin //IN
 		id = 8'h11;
 		arg1 = {3'b000, n2[0], n1};	// Rd
-		arg2 = {n2[2:1], n0}; // A
+		arg2 = {2'b0, n2[2:1], n0}; // A
 	end
 	else if (n3 == 4'b1001 && n2[3:1] == 3'b010 && n0 == 4'b0011) begin // INC
 		id = 8'h12;
@@ -146,7 +146,7 @@ always @(*) begin
 	// skip 0x1C to 0x1F for LD Z
 	else if (n3 == 4'b1110) begin // LDI
 		id = 8'h20;
-		arg1 = {4'b0000, n1};	// Rd
+		arg1 = {4'b0001, n1};	// Rd
 		arg2 = {n2, n0}; // K
 	end
 	else if (n3 == 4'b1001 && n2[3:1] == 3'b000 && n0 == 4'b0000) begin // LDS 

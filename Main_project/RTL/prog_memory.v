@@ -8,8 +8,9 @@ module prog_memory (
 	input [14:0] LPM_addr,
 	input LPM_read,	// set to read with LPM 
 	output [7:0] LPM_data,
-	output [15:0] instruction, // The I-reg output 
-	output [13:0] program_counter	// The PC output
+	output [15:0] instruction,  // The I-reg output 
+	output [13:0] program_counter,	// The PC output
+	output [15:0] ireg_test
 );
 
 reg [13:0] PC; 
@@ -25,6 +26,7 @@ wire [14:0] addrA;
 assign instruction = Ireg_temp;
 assign program_counter = PC;
 assign LPM_data = LPM_out; 
+assign ireg_test = {Ireg_high, Ireg_low};
 
 multi_bit_multiplexer_2way #(.WIDTH(4'hF)) addr_sel (
 	.A(read_addr),
@@ -40,7 +42,7 @@ dual_ROM prog_mem (
 	.WE(1'b0),	// its a ROM, no writing
 	.addr_a(addrA),
 	.addr_b(read_addr + 1'b1),
-	.clr_reg_n(~PC_overwrite),
+	.clr_reg_n(1'b1),
 	.en_reg(~hold),
 	.Qa(Ireg_low),
 	.Qb(Ireg_high)

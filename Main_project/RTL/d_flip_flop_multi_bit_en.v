@@ -23,11 +23,12 @@ always @(posedge(clk), negedge(clr_n))
 			q <= RESETVAL;
 		end
 	else
-		if(enable == 1'b0)
-			q <= q;					// Q is in a hold state if the write enable is low
-		else		
-			q <= d;					// Q is assigned the value of D on the rising clock edge
-		
+		begin 
+			if(enable == 1'b0)
+				q <= q;					// Q is in a hold state if the write enable is low
+			else		
+				q <= d;					// Q is assigned the value of D on the rising clock edge
+		end
 		
 		
 assign Q = q;

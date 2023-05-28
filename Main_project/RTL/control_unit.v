@@ -1536,7 +1536,7 @@ begin
         // 1	0	1	0	000	0	0	0	0
         begin
             pc_inc <= 1'b0;
-            ireg_hold <= 1'b0;
+            ireg_hold <= 1'b1;
             pc_overwrite <= 1'b1;
             gp_reg_write <= 1'b0;
             alu_sel <= 3'b000;
@@ -1546,7 +1546,7 @@ begin
             memory_write_en <= 1'b0;
             sp_write_enable <= 1'b0;
                                 
-            clock_counter <= 2'b00;
+            clock_counter <= 2'b01;
         end
 
         else if (clock_counter == 2'b01)
@@ -1554,7 +1554,7 @@ begin
         begin
             pc_inc <= 1'b0;
             ireg_hold <= 1'b0;
-            pc_overwrite <= 1'b0;
+            pc_overwrite <= 1'b0; 
             gp_reg_write <= 1'b0;
             alu_sel <= 3'b000;
             use_carry <= 1'b0;
@@ -1563,9 +1563,8 @@ begin
             memory_write_en <= 1'b0;
             sp_write_enable <= 1'b0;
                                 
-            clock_counter <= 2'b00;
+            clock_counter <= 2'b10;
         end
-
         else
         // 0	0	0	0	000	0	0	0	0
         begin

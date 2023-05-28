@@ -17,15 +17,38 @@ assign  sysClock = clock50MHz;
 //	.rst(reset_n),      					//   reset.reset
 //	.outclk_0(sysClock) 					// outclk0.clk
 //);
-
+wire [7:0] RD1;
+wire [7:0] RD2;
+wire [255:0] all_registers;
+wire [7:0] tifr_timer0_O;
+wire [7:0] timsk_timer0_O; 
+wire [7:0] TCNT0_O;
+wire [7:0] TCCR0_O;
+wire [7:0] OCR0_O;
 //********************************************************************************************************************************
 // Instantiate the control unit
+wire [7:0] tifr_timer1_O;
+wire [7:0] timsk_timer1_O; 
+wire [7:0] TCNT1H_O;
+wire [7:0] TCNT1L_O;
+wire [7:0] TCCR1_O;
+wire [7:0] OCR1AH_O;
+wire [7:0] OCR1AL_O;
 wire CU_part2;
 wire [2:0] CU_ALU_sel;
+wire [7:0] RF_WD_selected;
 wire CU_PC_inc;
 wire CU_IREG_hold;
 wire CU_PC_overwrite;
 wire CU_GP_reg_write;
+wire [7:0] DDRC_O;
+wire [7:0] DDRB_O;
+wire [7:0] PORTC_O;
+wire [7:0] PORTB_O;
+wire [7:0] PINC_O;
+wire [7:0] PINB_O;
+assign GPIOC_port = PORTC_O;
+assign GPIOB_port = PORTB_O;
 wire CU_USE_carry;
 wire CU_STATUS_reg_sel;
 wire CU_IO_only_flag;
@@ -33,6 +56,61 @@ wire CU_memory_write_en;
 wire CU_SP_write_en;
 wire [1:0] CU_clock_counter;
 wire [1:0] INTERRUPT_STAGE;
+wire [7:0] status_register_bus;
+wire [15:0] alu_output;
+wire [7:0] SREG_O = status_register_bus;
+wire CU2_LPM_enable;
+wire [7:0] MM_data_in_selected;
+wire SP_inL_sel;
+wire [15:0] MM_address_selected;
+wire [7:0] SP_inL_selected;
+wire [15:0] MM_address_mux_A = all_registers[239:224]; // Y reg
+wire [2:0] MM_addr_sel;
+wire [1:0] MM_data_sel;
+wire [1:0] PM_PC_new_sel;
+wire [1:0] ALU_arg2_sel;
+wire ALU_arg1_sel;
+wire RF_WA_sel;
+wire [2:0] RF_WD_sel;
+wire [15:0] sp;
+wire [7:0] SPH_O;
+wire [7:0] SPL_O; 
+// D unused 
+wire [13:0] PM_PC_new_selected;
+wire [63:0] MM_IO_we_bus; // 64 bit bus for the write enable signals for the memory map
+wire MM_reg_WE;
+wire [4:0] MM_reg_write_addr;
+wire [7:0] MM_write_data; 
+wire [7:0] MM_Q_O; // 8 bit output from the memory map
+wire [7:0] argument_1;
+wire [7:0] argument_2;
+wire [7:0] instruction_id;
+wire [13:0] program_counter;
+wire [15:0] PM_instruction_O; // 16 bit instruction output from the program memory
+wire [7:0] PM_LPM_O;
+wire [7:0] ALU_arg2_selected;
+wire [7:0] ALU_arg1_selected; 
+wire [4:0] RF_WA_selected;
+wire [7:0] TIFR_O = tifr_timer0_O | tifr_timer1_O;
+wire [7:0] TIMSK_O = timsk_timer0_O | timsk_timer1_O;
+wire [13:0] PC_new_C = program_counter + {argument_2[5:0], argument_1} + 14'h1;
+wire [15:0] MM_address_mux_B = {8'b0, argument_2};	// 8 bit argument 2
+wire [15:0] MM_address_mux_D = {sp[15:8], alu_output[7:0]}; // 16 bit stack pointer
+wire [7:0] MM_PCH = {2'b0, program_counter[13:8]};
+wire [7:0] MM_SREG_I = {(SREG_O[7]^1'b1), SREG_O[6:0]};
+
+wire [511:0] IO_cat_bus = {
+	SREG_O, SPH_O, SPL_O, OCR0_O,
+	16'B0, // 2 registers 
+	TIMSK_O, TIFR_O,
+	32'B0,	// 4 registers 
+	TCCR0_O, TCNT0_O,
+	24'B0,	// 3 registers 
+	TCCR1_O, TCNT1H_O, TCNT1L_O, OCR1AH_O, OCR1AL_O,
+	136'B0, // 17 registers 
+	PORTB_O, DDRB_O, PINB_O, PORTC_O, DDRC_O, PINC_O, 
+	152'B0	// 19 registers 
+};
 
 control_unit control_unit(
     .clk(sysClock),
@@ -60,7 +138,7 @@ control_unit control_unit(
 
 //*******************************************************************************************************************************
 
-wire CU2_LPM_enable;
+
 
 control_unit_2 control_unit_2 (
 	.clk(sysClock),
@@ -73,14 +151,7 @@ control_unit_2 control_unit_2 (
 
 //*******************************************************************************************************************************
 // Instatiate the control MUX unit
-wire SP_inL_sel;
-wire [2:0] MM_addr_sel;
-wire [1:0] MM_data_sel;
-wire [1:0] PM_PC_new_sel;
-wire [1:0] ALU_arg2_sel;
-wire ALU_arg1_sel;
-wire RF_WA_sel;
-wire [2:0] RF_WD_sel;
+
 control_mux control_mux (
    	.clk(sysClock),
    	.reset_n(reset_n), 
@@ -103,16 +174,14 @@ control_mux control_mux (
 //*******************************************************************************************************************************
 // Stack pointer in multiplexers 
 // either from ALU (+/- 1) or from memory map when writing to SPH or SPL
-wire [7:0] SP_inL_selected;
+
 
 multi_bit_multiplexer_2way #(8) SP_inL_mux (
 	.A(alu_output[7:0]), .B(MM_write_data), .S(SP_inL_sel), .out(SP_inL_selected)
 );
 
 // Instantiate the Stack Pointer
-wire [15:0] sp;
-wire [7:0] SPH_O;
-wire [7:0] SPL_O; 
+
 stack_pointer stack_pointer (
     .clk(sysClock),
     .clr_n(reset_n),
@@ -133,10 +202,7 @@ stack_pointer stack_pointer (
 // multiplexer for MM address selection
 // Can come from Y reg on register file or from decoder arguments or from SP, or ALU
 // Option 5 is hard coded SREG address 
-wire [15:0] MM_address_selected;
-wire [15:0] MM_address_mux_A = all_registers[239:224]; // Y reg
-wire [15:0] MM_address_mux_B = {8'b0, argument_2};	// 8 bit argument 2
-wire [15:0] MM_address_mux_D = {sp[15:8], alu_output[7:0]}; // 16 bit stack pointer
+
 
 multi_bit_multiplexer_8way #(16) MM_address_mux (
 	.reg0(MM_address_mux_A), .reg1(MM_address_mux_B), .reg2(sp), .reg3(MM_address_mux_D), 
@@ -146,9 +212,7 @@ multi_bit_multiplexer_8way #(16) MM_address_mux (
 
 // mux for data in 
 // can come from reg file, PCL or PCH, or from SREG toggle I
-wire [7:0] MM_data_in_selected;
-wire [7:0] MM_PCH = {2'b0, program_counter[13:8]};
-wire [7:0] MM_SREG_I = {(SREG_O[7]^1'b1), SREG_O[6:0]};
+
 
 multi_bit_multiplexer_4way #(8) MM_data_in_mux (
 	.A(RD1), .B(program_counter[7:0]), .C(MM_PCH), .D(MM_SREG_I), // PC + 1'b1 for storing next PC address 
@@ -156,11 +220,6 @@ multi_bit_multiplexer_4way #(8) MM_data_in_mux (
 );
 
 
-wire [63:0] MM_IO_we_bus; // 64 bit bus for the write enable signals for the memory map
-wire MM_reg_WE;
-wire [4:0] MM_reg_write_addr;
-wire [7:0] MM_write_data; 
-wire [7:0] MM_Q_O; // 8 bit output from the memory map
 // Instantiate the Memory Map
 memory_map memory_map (
 	.clk(sysClock),
@@ -183,9 +242,7 @@ memory_map memory_map (
 
 //*******************************************************************************************************************************
 // Instantiate the Instruction Decoder
-wire [7:0] argument_1;
-wire [7:0] argument_2;
-wire [7:0] instruction_id;
+
 instruction_decoder instruction_decoder (
 	.instruction(PM_instruction_O),
 	.part2(CU_part2),
@@ -198,18 +255,14 @@ instruction_decoder instruction_decoder (
 //*******************************************************************************************************************************
 // mux for PC_new
 // can come from interrupt trigger, decoder argument, from the controller (call/Ret) 
-// C is K from decoder for RJMP/RCALL
-wire [13:0] PC_new_C = {argument_2[3:0], argument_1};
-// D unused 
-wire [13:0] PM_PC_new_selected;
+// C is K from decoder for RJMP/RCALL 
+
 multi_bit_multiplexer_4way #(14) PM_PC_new_mux (
-	.A(14'h00E), .B(argument_1), .C(PC_new_C), .D(14'b0), .S(PM_PC_new_sel), .out(PM_PC_new_selected)
+	.A(14'h00E), .B((program_counter + {6'b0, argument_1} + 14'h1)), .C(PC_new_C), .D(14'b0), .S(PM_PC_new_sel), .out(PM_PC_new_selected)
 );
 
 // Instatiate the program memory
-wire [13:0] program_counter;
-wire [15:0] PM_instruction_O; // 16 bit instruction output from the program memory
-wire [7:0] PM_LPM_O;
+wire [15:0] ireg_test_sig;
 prog_memory prog_memory(
 	.clk(sysClock),
 	.reset_n(reset_n), 			// resets everything
@@ -225,14 +278,14 @@ prog_memory prog_memory(
 	// Outputs
 	.LPM_data(PM_LPM_O),
 	.instruction(PM_instruction_O), 			// The I-reg output 
-	.program_counter(program_counter)			// The PC output
+	.program_counter(program_counter),			// The PC output
+	.ireg_test(ireg_test_sig)
 );
 
 //*******************************************************************************************************************************
 // Multiplexer for ALU arg 2 selection 
 // From register file output 2 or from arg2 of instruction decoder or from SP
-wire [7:0] ALU_arg2_selected;
-wire [7:0] ALU_arg1_selected; 
+
 multi_bit_multiplexer_4way #(8) ALU_arg2 (
 	.A(RD2), .B(argument_2), .C(8'h1), .D(8'b0), .S(ALU_arg2_sel), .out(ALU_arg2_selected)
 );
@@ -244,9 +297,7 @@ multi_bit_multiplexer_2way #(8) ALU_arg1 (
 );
 
 // Instatiate the ALU
-wire [7:0] status_register_bus;
-wire [15:0] alu_output;
-wire [7:0] SREG_O = status_register_bus;
+
 ALU ALU0 (
 	.clk(sysClock),
 	.reset_n(reset_n),
@@ -275,31 +326,29 @@ ALU ALU0 (
 //*******************************************************************************************************************************
 // reg file WA mux
 // can select from decoder argyment, memory map 
-wire [7:0] RF_WA_selected;
-multi_bit_multiplexer_2way #(8) RegFile_WA_mux (
-	.A(argument_1), .B(MM_reg_write_addr), .S(RF_WA_sel), .out(RF_WA_selected) 
+
+multi_bit_multiplexer_2way #(5) RegFile_WA_mux (
+	.A(argument_1[4:0]), .B(MM_reg_write_addr), .S(RF_WA_sel), .out(RF_WA_selected) 
 );
 
 // reg file WD mux
 // can come from ALU, memory map data, decoder argument or LPM output 
-wire [7:0] RF_WD_selected;
+
 multi_bit_multiplexer_8way #(8) RegFile_WD_mux (
-	.reg0(alu_output), .reg1(MM_write_data), .reg2(argument_2), .reg3(PM_LPM_O), 
+	.reg0(alu_output[7:0]), .reg1(MM_write_data), .reg2(argument_2), .reg3(PM_LPM_O), 
 	.reg4(MM_Q_O), .reg5(8'h0), .reg6(8'h0), .reg7(8'h0),
 	.S(RF_WD_sel), .out(RF_WD_selected)
 );
 
 // Instantiate the register file
-wire [7:0] RD1;
-wire [7:0] RD2;
-wire [255:0] all_registers;
+
 register_file register_file(
 	.clock(sysClock),						// Clock input
 	.clr_n(reset_n),
 
 	// Inputs
-	.RA1(argument_1),							// Read register 1
-	.RA2(argument_2),							// Read register 2
+	.RA1(argument_1[4:0]),							// Read register 1
+	.RA2(argument_2[4:0]),							// Read register 2
 	.WA(RF_WA_selected),							// Write register
 	.RegWrite(CU_GP_reg_write),					// Write enable signal
 	.WD(RF_WD_selected),							// Write data
@@ -316,14 +365,7 @@ Below this line is completely filled
 */
 
 // Instantiate the GPIO for GPIOC and GPIOB
-wire [7:0] DDRC_O;
-wire [7:0] DDRB_O;
-wire [7:0] PORTC_O;
-wire [7:0] PORTB_O;
-wire [7:0] PINC_O;
-wire [7:0] PINB_O;
-assign GPIOC_port = PORTC_O;
-assign GPIOB_port = PORTB_O;
+
 gpio gpio (
 	.clk(sysClock),
 	.clr_n(reset_n),
@@ -358,11 +400,7 @@ gpio gpio (
 
 //*******************************************************************************************************************************
 // Instantiate the 8-bit Timer 0
-wire [7:0] tifr_timer0_O;
-wire [7:0] timsk_timer0_O; 
-wire [7:0] TCNT0_O;
-wire [7:0] TCCR0_O;
-wire [7:0] OCR0_O;
+
 timer_8bit timer0_8bit(
 	.sysClock(sysClock),				// The system clock
 	.rst_n(reset_n),
@@ -393,13 +431,7 @@ timer_8bit timer0_8bit(
 
 //*******************************************************************************************************************************
 // Instantiate the 16-bit Timer 1
-wire [7:0] tifr_timer1_O;
-wire [7:0] timsk_timer1_O; 
-wire [7:0] TCNT1H_O;
-wire [7:0] TCNT1L_O;
-wire [7:0] TCCR1_O;
-wire [7:0] OCR1AH_O;
-wire [7:0] OCR1AL_O;
+
 timer_16bit timer1_16bit(
 	.sysClock(sysClock),				// The system clock
 	.rst_n(reset_n),
@@ -432,22 +464,10 @@ timer_16bit timer1_16bit(
 );
 
 // An output wire for the joint TIFR output
-wire [7:0] TIFR_O = tifr_timer0_O | tifr_timer1_O;
-wire [7:0] TIMSK_O = timsk_timer0_O | timsk_timer1_O;
+
 
 // Wire for IO bus for memory map 
-wire [511:0] IO_cat_bus = {
-	SREG_O, SPH_O, SPL_O, OCR0_O,
-	16'B0, // 2 registers 
-	TIMSK_O, TIFR_O,
-	32'B0,	// 4 registers 
-	TCCR0_O, TCNT0_O,
-	24'B0,	// 3 registers 
-	TCCR1_O, TCNT1H_O, TCNT1L_O, OCR1AH_O, OCR1AL_O,
-	136'B0, // 17 registers 
-	PORTB_O, DDRB_O, PINB_O, PORTC_O, DDRC_O, PINC_O, 
-	152'B0	// 19 registers 
-};
+
 
 endmodule
 
