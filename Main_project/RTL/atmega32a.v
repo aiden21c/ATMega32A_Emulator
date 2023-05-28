@@ -81,9 +81,11 @@ stack_pointer stack_pointer(
 // multiplexer for MM address selection
 // Can come from Y reg on register file or from decoder arguments or from SP
 wire [15:0] MM_address_selected;
+wire [15:0] MM_address_mux_A = all_registers[239:224];
+wire [15:0] MM_address_mux_B = {8'b0, argument_2};
 
-multi_bit_multiplexer_3way #(16) MM_address_mux (
-	.A(all_registers[239:224]), .B({8'b0, argument_2}), .C(sp), .S(), .out(MM_address_selected)
+multi_bit_multiplexer_4way #(16) MM_address_mux (
+	.A(MM_address_mux_A), .B(MM_address_mux_B), .C(sp), .D(16'b0), .S(), .out(MM_address_selected)
 );
 
 wire [63:0] MM_IO_we_bus; // 64 bit bus for the write enable signals for the memory map
@@ -136,7 +138,7 @@ multi_bit_multiplexer_4way #(14) PM_PC_new_mux (
 // Instatiate the program memory
 wire [13:0] program_counter;
 wire [15:0] PM_instruction_O; // 16 bit instruction output from the program memory
-wire [8:0] PM_LPM_O
+wire [8:0] PM_LPM_O;
 prog_memory prog_memory(
 	.clk(sysClock),
 	.reset_n(reset_n), 			// resets everything
