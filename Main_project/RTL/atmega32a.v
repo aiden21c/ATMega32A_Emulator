@@ -19,6 +19,8 @@ single16MHzPLL single16MHzPLL(
 
 // Instantiate the Stack Pointer
 wire [15:0] sp;
+wire [7:0] SPH_O;
+wire [7:0] SPL_O; 
 stack_pointer stack_pointer(
     .clk(sysClock),
     .clr_n(reset_n),
@@ -26,22 +28,23 @@ stack_pointer stack_pointer(
 	// Inputs
     .data_inH(),
     .data_inL(),
-    .WE_H(),
-	.WE_L(),
+    .WE_H(MM_IO_we_bus[62]),
+	.WE_L(MM_IO_we_bus[61]),
 
 	// Outputs
-    .spH(),
-    .spL(),
+    .spH(SPH_O),
+    .spL(SPL_O),
     .sp(sp)
 );
 
+wire [63:0] MM_IO_we_bus; // 64 bit bus for the write enable signals for the memory map
 // Instantiate the Memory Map
 memory_map memory_map (
 	.clk(sysClock),
 
 	.addr(),	//16 bit address	
 	.register_bus(all_registers), //A bus of all 32 GP registers 
-	.IO_bus(), //A bus of all 64 IO registers 
+	.IO_bus(IO_cat_bus), //A bus of all 64 IO registers 
 	
 	.WE(),	//write enable
 	.data_in(),
@@ -49,7 +52,7 @@ memory_map memory_map (
 	.IO_only(),
 	
 	.Q(),
-	.IO_WE(), 
+	.IO_WE(MM_IO_we_bus), 
 	.reg_WE(),
 	.reg_write_addr(), 
 	.write_data()
@@ -91,11 +94,12 @@ prog_memory prog_memory(
 // Instatiate the ALU
 wire [7:0] status_register_bus;
 wire [15:0] alu_output;
+wire [7:0] SREG_O = status_register_bus;
 ALU ALU (
 	.clk(sysClock),
 	.reset_n(reset_n),
 
-	.mem_write(),
+	.mem_write(MM_IO_we_bus[63]),
 	.mem_data(),
 
 	.arg1(RD1),
@@ -139,39 +143,51 @@ register_file register_file(
 );
 
 // Instantiate the GPIO for GPIOA and GPIOB
+wire [7:0] DDRA_O;
+wire [7:0] DDRB_O;
+wire [7:0] PORTA_O;
+wire [7:0] PORTB_O;
+wire [7:0] PINA_O;
+wire [7:0] PINB_O;
+assign GPIOA_port = PORTA_O;
+assign GPIOB_port = PORTB_O;
 gpio gpio (
 	.clk(sysClock),
 	.clr_n(reset_n),
 	
 	// GPIOA inputs and outputs
-	.DDRA_write_enable(),
+	.DDRA_write_enable(MM_IO_we_bus[26]),
 	.DDRA_input_data(),
 	
-	.PORTA_write_enable(),
+	.PORTA_write_enable(MM_IO_we_bus[27]),
 	.PORTA_input_data(),
 	
 	.PINA_input_data(PINA_input_data),	
 
-	.DDRA_output(),
-	.PORTA_output(GPIOA_port),
-	.PINA_output(),
+	.DDRA_output(DDRA_O),
+	.PORTA_output(PORTA_O),
+	.PINA_output(PINA_O),
 	
 	// GPIOB inputs and outputs
-	.DDRB_write_enable(),
+	.DDRB_write_enable(MM_IO_we_bus[23]),
 	.DDRB_input_data(),
 	
-	.PORTB_write_enable(),
+	.PORTB_write_enable(MM_IO_we_bus[24]),
 	.PORTB_input_data(),
 	
 	.PINB_input_data(),	
 
-	.DDRB_output(),
-	.PORTB_output(GPIOB_port),
-	.PINB_output()
+	.DDRB_output(DDRB_O),
+	.PORTB_output(PORTB_O),
+	.PINB_output(PINB_O)
 );
 
 // Instantiate the 8-bit Timer 0
-wire [7:0] tifr_timer0;
+wire [7:0] tifr_timer0_O;
+wire [7:0] timsk_timer0_O; 
+wire [7:0] TCNT0_O;
+wire [7:0] TCCR0_O;
+wire [7:0] OCR0_O;
 timer_8bit timer0_8bit(
 	.sysClock(sysClock),				// The system clock
 	.rst_n(reset_n),
@@ -183,24 +199,30 @@ timer_8bit timer0_8bit(
 	.TIFR_input(),				// 8 bit input used to update the TIFR register
 	
 	// Register write enable signals
-	.TCNT_write_enable(),
-	.TCCR_write_enable(),
-	.OCR_write_enable(),
-	.TIMSK_write_enable(),
-	.TIFR_write_enable(),
+	.TCNT_write_enable(MM_IO_we_bus[50]),
+	.TCCR_write_enable(MM_IO_we_bus[51]),
+	.OCR_write_enable(MM_IO_we_bus[60]),
+	.TIMSK_write_enable(MM_IO_we_bus[57]),
+	.TIFR_write_enable(MM_IO_we_bus[56]),
 	
-	.clear_count(tifr[1]),				// Used to clear the TCNT0 register to 0
+	.clear_count(TIFR_O[1]),				// Used to clear the TCNT0 register to 0
 	
 	// Outputs
-	.TCNT_output(),				// 8 bit output for the TCNT register
-	.TCCR_output(),				// 8 bit output for the TCCR register
-	.OCR_output(),				// 8 bit output for the OCR register
-	.TIMSK_output(),				// 8 bit output for the TIMSK register
-	.TIFR_output(tifr_timer0)	// 8 bit output for the TIFR register
+	.TCNT_output(TCNT0_O),				// 8 bit output for the TCNT register
+	.TCCR_output(TCCR0_O),				// 8 bit output for the TCCR register
+	.OCR_output(OCR0_O),				// 8 bit output for the OCR register
+	.TIMSK_output(timsk_timer0_O),				// 8 bit output for the TIMSK register
+	.TIFR_output(tifr_timer0_O)	// 8 bit output for the TIFR register
 );
 
 // Instantiate the 16-bit Timer 1
-wire [7:0] tifr_timer1;
+wire [7:0] tifr_timer1_O;
+wire [7:0] timsk_timer1_O; 
+wire [7:0] TCNT1H_O;
+wire [7:0] TCNT1L_O;
+wire [7:0] TCCR1_O;
+wire [7:0] OCR1AH_O;
+wire [7:0] OCR1AL_O;
 timer_16bit timer1_16bit(
 	.sysClock(sysClock),				// The system clock
 	.rst_n(reset_n),
@@ -217,23 +239,38 @@ timer_16bit timer1_16bit(
 	.TCNT_write_enable(),
 	.TCCR_write_enable(),
 	.OCR_write_enable(),
-	.TIMSK_write_enable(),
-	.TIFR_write_enable(),
+	.TIMSK_write_enable(MM_IO_we_bus[57]),
+	.TIFR_write_enable(MM_IO_we_bus[56]),
 	
-	.clear_count(tifr[4]),					// Used to clear the TCNT0 register to 0
+	.clear_count(TIFR_O[4]),					// Used to clear the TCNT0 register to 0
 	
-	.TCNT1H_output(),				// 8 bit high output for the TCNT register
-	.TCNT1L_output(),				// 8 bit low output for the TCNT register
-	.TCCR_output(),					// 8 bit output for the TCCR register
-	.OCR1AH_output(),				// 8 bit output for the OCR register
-	.OCR1AL_output(),				// 8 bit output for the OCR register
-	.TIMSK_output(),				// 8 bit output for the TIMSK register
-	.TIFR_output()					// 8 bit output for the TIFR register
+	.TCNT1H_output(TCNT1H_O),				// 8 bit high output for the TCNT register
+	.TCNT1L_output(TCNT1L_O),				// 8 bit low output for the TCNT register
+	.TCCR_output(TCCR1_O),					// 8 bit output for the TCCR register
+	.OCR1AH_output(OCR1AH_O),				// 8 bit output for the OCR register
+	.OCR1AL_output(OCR1AL_O),				// 8 bit output for the OCR register
+	.TIMSK_output(timsk_timer1_O),				// 8 bit output for the TIMSK register
+	.TIFR_output(tifr_timer1_O)					// 8 bit output for the TIFR register
 );
 
 // An output wire for the joint TIFR output
-wire [7:0] tifr = tifr_timer0 | tifr_timer1;
+wire [7:0] TIFR_O = tifr_timer0_O | tifr_timer1_O;
+wire TIMSK_O = timsk_timer0_O | timsk_timer1_O;
 
+// Wire for IO bus for memory map 
+wire [511:0] IO_cat_bus = {
+	SREG_O, SPH_O, SPL_O, OCR0_O,
+	16'B0, 
+	TIMSK_O, TIFR_O,
+	32'B0,
+	TCCR0_O, TCNT0_O,
+	16'B0,
+	TCCR1_O, TCCR1_O, TCNT1H_O, TCNT1L_O, OCR1AH_O, OCR1AL_O, // FIX TCCR1 FOR A AND B
+	112'B0, 
+	PORTA_O, DDRA_O, PINA_O, PORTB_O, DDRB_O, PINB_O, 
+	PORTA_O, DDRA_O, PINA_O, PORTB_O, DDRB_O, PINB_O, // FIX TO GPIOC AND GPIOD
+	128'B0
+};
 
 endmodule
 
