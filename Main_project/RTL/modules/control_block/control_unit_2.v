@@ -19,7 +19,12 @@ always @(posedge(clk), negedge(reset_n)) begin
       LPM_enable_reg = 1'b0;
    end
    else if(instruction_id == 8'h22) begin 		// LPM
-      // check clock counter and set LPM_enable if needed 
+       if (clock_counter == 2'b00 || clock_counter == 2'b01) begin
+          LPM_enable_reg = 1'b1;
+       end
+       else begin
+          LPM_enable_reg = 1'b0;
+       end
    end
    else begin
       LPM_enable_reg = 1'b0;

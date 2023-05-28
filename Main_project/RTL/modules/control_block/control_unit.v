@@ -4,6 +4,7 @@ module control_unit (
 
     input [7:0] instruction_id,
     input [7:0] status_register,
+    input OC_flag,
 
     output instruction_decoder_part2,
 
@@ -18,7 +19,8 @@ module control_unit (
     output MEMORY_WRITE_EN,
     output SP_WRITE_ENABLE,
 
-    output [1:0] CLOCK_COUNTER
+    output [1:0] CLOCK_COUNTER,
+    output [1:0] INTERRUPT_STAGE
 );
 
 reg clock_counter;
@@ -37,6 +39,8 @@ reg io_only_flag;
 reg memory_write_en;
 reg sp_write_enable;
 
+reg [1:0] interrupt_stage; 
+
 always @(posedge(clk), negedge(reset_n))
 begin
 	if(!reset_n)
@@ -54,9 +58,86 @@ begin
         sp_write_enable <= 1'b0;
 
         clock_counter <= 2'b00;
-	end
 
-    else if(instruction_id == 8'b00000000)			    // NOP
+        interrupt_stage <= 2'b00;
+	end
+    else if (interrupt_stage > 2'h0) begin 
+        // Handle interrupt 
+        // Save PC
+        // Update PC
+        if (interrupt_stage == 2'h1) 
+        begin 
+            // save PC high 
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b001;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b1;
+
+            clock_counter <= 2'b00;
+
+            interrupt_stage <= 2'b10;
+        end
+        else if (interrupt_stage == 2'h2) 
+        begin 
+            // save PC low 
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b001;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b1;
+
+            clock_counter <= 2'b00;
+
+            interrupt_stage <= 2'b11;
+        end
+        else if (interrupt_stage == 2'h3) 
+        begin
+            // update PC 
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b1;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+
+            clock_counter <= 2'b00;
+
+            interrupt_stage <= 2'b00;
+        end
+    end 
+    else if ((OC_flag == 1'b1) && (status_register[I] == 2'b00) && (clock_counter == 2'b00)) 
+    begin // handle interrupt
+        interrupt_stage <= 2'b01; //set stage to 1 
+        // clear I bit 
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b1;   //write to SREG
+        memory_write_en <= 1'b1;
+        sp_write_enable <= 1'b0;
+
+        clock_counter <= 2'b00;
+    end 
+    else if(instruction_id == 8'b00000000)			// NOP
     // 0	0	0	0	000	0	0	0	0
 	begin
         pc_inc <= 1'b0;
@@ -107,7 +188,7 @@ begin
         clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00000011)			// AND (1 cyclec
+	else if(instruction_id == 8'b00000011)			// AND (1 cycle)
     // 1	0	0	1	101	0	0	0	0
 	begin
 		pc_inc <= 1'b1;
@@ -394,9 +475,21 @@ begin
         end
 	end
 
-	else if(instruction_id == 8'b00001001)			// CALL (4 cycles) // TODO
+	else if(instruction_id == 8'b00001001)			// CALL (4 cycles)
+    // 0	0	0	0	000	0	0	0	0
 	begin
-		
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b0;
+        memory_write_en <= 1'b0;
+        sp_write_enable <= 1'b0;
+        
+        clock_counter <= 2'b00;
 	end
 
 	else if(instruction_id == 8'b00001010)			// CLI (1 cycle)
@@ -467,9 +560,56 @@ begin
         clock_counter <= 2'b00;		
 	end
 
-	else if(instruction_id == 8'b00001110)			// CPSE (3 cycles) // TODO
+	else if(instruction_id == 8'b00001110)			// CPSE (2 cycles)
 	begin
-		
+        if(clock_counter == 2'b00)
+        begin
+        // clock cycle 0
+            pc_inc <= 1'b1;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b001;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b01;
+        end
+        else if(clock_counter == 2'b01)
+        begin
+        // clock cycle 1  
+            pc_inc <= status_register[Z];
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
+
+        else
+        begin
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
 	end
 
 	else if(instruction_id == 8'b00001111)			// DEC
@@ -540,10 +680,21 @@ begin
         clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00010011)			// JMP (3 cycles) // TODO
-    // 
+	else if(instruction_id == 8'b00010011)			// JMP (3 cycles)
+    // 0	0	0	0	000	0	0	0	0
 	begin
-		
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b0;
+        memory_write_en <= 1'b0;
+        sp_write_enable <= 1'b0;
+        
+        clock_counter <= 2'b00;
 	end
 
 	else if(instruction_id == 8'b00010100)			// LD (X)
@@ -631,17 +782,77 @@ begin
         clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00011001)			// LD(Y) - i (2 cycles) // TODO
+	else if(instruction_id == 8'b00011001)			// LD(Y) - i (2 cycles)
 	begin
-		
+        if(clock_counter == 2'b00)
+        begin
+        // clock cycle 0
+            pc_inc <= 1'b1;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b01;
+        end
+
+        else if(clock_counter == 2'b01)
+        begin
+        // clock cycle 1  
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b1;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;		
+        end
+
+        else
+        begin
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
 	end
 
-	else if(instruction_id == 8'b00011010)			// LD(Y) - ii (2 cycles) // TODO
+	else if(instruction_id == 8'b00011010)			// LD(Y) - ii (3 cycles)
+    // 0	0	0	0	000	0	0	0	0
 	begin
-		
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b0;
+        memory_write_en <= 1'b0;
+        sp_write_enable <= 1'b0;
+                            
+        clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00011011)			// LD(Y) - iii (2 cycles)
+	else if(instruction_id == 8'b00011011)			// LD(Y) - iii (3 cycles)
     // 0	0	0	0	000	0	0	0	0
 	begin
         pc_inc <= 1'b0;
@@ -743,15 +954,92 @@ begin
         clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00100001)			// LDS (2 cycles) // TODO
+	else if(instruction_id == 8'b00100001)			// LDS (2 cycles)
+    // 0	0	0	0	000	0	0	0	0
 	begin
-		
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b0;
+        memory_write_en <= 1'b0;
+        sp_write_enable <= 1'b0;
+                            
+        clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00100010)			// LPM (3 cycles) // TODO
-	begin
-		
-	end
+	else if(instruction_id == 8'b00100010)			// LPM (3 cycles)
+    begin
+        if(clock_counter == 2'b00)
+        begin
+        // clock cycle 0
+            pc_inc <= 1'b1;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b01;
+        end
+
+        else if(clock_counter == 2'b01)
+        begin
+        // clock cycle 1  
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b10;
+        end
+
+        else if(clock_counter == 2'b10)
+        begin
+        // clock cycle 2
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b1;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
+
+        else
+        begin
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
+    end
 
 	else if(instruction_id == 8'b00100011)			// LSL (1 cycle)
     // 0	0	0	0	000	0	0	0	0
@@ -806,11 +1094,11 @@ begin
 
 	else if(instruction_id == 8'b00100110)			// MUL (2 cycle)
 	begin
-        if(clock_counter == 1'b00)
-        // 1	0	0	1	010	0	0	0	0
+        if(clock_counter == 2'b00)
+        // 1	1	0	1	010	0	0	0	0
         begin
             pc_inc <= 1'b1;
-            ireg_hold <= 1'b0;
+            ireg_hold <= 1'b1;
             pc_overwrite <= 1'b0;
             gp_reg_write <= 1'b1;
             alu_sel <= 3'b010;
@@ -823,7 +1111,7 @@ begin
             clock_counter <= 2'b00;
         end
 
-        else if (clock_counter == 1'b01)
+        else if (clock_counter == 2'b01)
         // 0	0	0	1	010	0	0	0	0
         begin
             pc_inc <= 1'b0;
@@ -911,11 +1199,11 @@ begin
 
 	else if(instruction_id == 8'b00101010)			// POP (2 cycles)
 	begin
-        if(clock_counter == 1'b00)
+        if(clock_counter == 2'b00)
         // 1	0	0	0	000	0	0	0	1
         begin
             pc_inc <= 1'b1;
-            ireg_hold <= 1'b0;
+            ireg_hold <= 1'b1;
             pc_overwrite <= 1'b0;
             gp_reg_write <= 1'b0;
             alu_sel <= 3'b000;
@@ -925,10 +1213,10 @@ begin
             memory_write_en <= 1'b1;
             sp_write_enable <= 1'b1;
                                 
-            clock_counter <= 2'b00;
+            clock_counter <= 2'b01;
         end
 
-        else if (clock_counter == 1'b01)
+        else if (clock_counter == 2'b01)
         // 0	0	0	1	000	0	0	0	0
         begin
             pc_inc <= 1'b0;
@@ -965,11 +1253,11 @@ begin
 
 	else if(instruction_id == 8'b00101011)			// PUSH (2 cycles)
 	begin
-        if(clock_counter == 1'b00)
+        if(clock_counter == 2'b00)
         // 1	0	0	0	000	0	0	0	1
         begin
             pc_inc <= 1'b1;
-            ireg_hold <= 1'b0;
+            ireg_hold <= 1'b1;
             pc_overwrite <= 1'b0;
             gp_reg_write <= 1'b0;
             alu_sel <= 3'b000;
@@ -979,10 +1267,10 @@ begin
             memory_write_en <= 1'b1;
             sp_write_enable <= 1'b0;
                                 
-            clock_counter <= 2'b00;
+            clock_counter <= 2'b01;
         end
 
-        else if (clock_counter == 1'b01)
+        else if (clock_counter == 2'b01)
         // 0	0	0	0	001	0	0	0	1
         begin
             pc_inc <= 1'b0;
@@ -1017,27 +1305,237 @@ begin
         end			
 	end
 
-	else if(instruction_id == 8'b00101100)			// RCALL (3 cycles) // TODO
+	else if(instruction_id == 8'b00101100)			// RCALL (4 cycles)
 	begin
-		
+        if(clock_counter == 2'b00)
+        begin 
+            pc_inc <= 1'b1;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b01; 
+        end 
+        else if(clock_counter == 2'b01)
+        begin
+		// clock cycle 1
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b001;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b1;
+                                
+            clock_counter <= 2'b10; 
+        end
+        else if(clock_counter == 2'b10)
+        begin
+        // clock cycle 2 
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b001;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b1;
+                                
+            clock_counter <= 2'b11;
+        end
+
+        else if(clock_counter == 2'b11)
+        begin
+        // clock cycle 3  
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b1;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;		
+        end
+        else
+        begin
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
 	end
 
-	else if(instruction_id == 8'b00101101)			// RET (4 cycles) // TODO
+	else if(instruction_id == 8'b00101101)			// RET (4 cycles)
 	begin
-		
+        if(clock_counter == 2'b00)
+        begin
+		// clock cycle 0
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b1;
+                                
+            clock_counter <= 2'b01;
+        end
+
+        else if(clock_counter == 2'b01)
+        begin
+        // clock cycle 1  
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b1;
+                                
+            clock_counter <= 2'b10;	
+        end
+
+        else if (clock_counter == 2'b10)
+        begin
+        // clock cycle 2
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b11;	
+        end
+
+        else if(clock_counter == 2'b11)
+        begin
+        // clock cycle 3
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b1;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;	
+        end
 	end
 
-	else if(instruction_id == 8'b00101110)			// RETI (4 cycles) // TODO
+	else if(instruction_id == 8'b00101110)			// RETI (4 cycles)
 	begin
-		
+        if(clock_counter == 2'b00)
+        begin
+        // clock cycle 0
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b1;
+                                
+            clock_counter <= 2'b01;
+        end
+
+        else if(clock_counter == 2'b01)
+        begin
+        // clock cycle 1  
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b1;
+                                
+            clock_counter <= 2'b10;	
+        end
+
+        else if (clock_counter == 2'b10)
+        begin
+        // clock cycle 2
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b11;	
+        end
+
+        else if (clock_counter == 2'b11)
+        begin
+        // clock cycle 3
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b1;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;	
+        end
 	end
 
 	else if(instruction_id == 8'b00101111)			// RJMP (2 cycles)
 	begin
-        if(clock_counter == 1'b00)
+        if(clock_counter == 2'b00)
         // 1	0	1	0	000	0	0	0	0
         begin
-            pc_inc <= 1'b1;
+            pc_inc <= 1'b0;
             ireg_hold <= 1'b0;
             pc_overwrite <= 1'b1;
             gp_reg_write <= 1'b0;
@@ -1051,7 +1549,7 @@ begin
             clock_counter <= 2'b00;
         end
 
-        else if (clock_counter == 1'b01)
+        else if (clock_counter == 2'b01)
         // 0	0	0	0	0	0	0	0	0
         begin
             pc_inc <= 1'b0;
@@ -1222,14 +1720,74 @@ begin
         clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00111000)			// ST(Y) - i (2 cycles) // TODO
+	else if(instruction_id == 8'b00111000)			// ST(Y) - i (2 cycles)
 	begin
-		
-	end
+		if(clock_counter == 2'b00)
+        begin
+        // clock cycle 0
+            pc_inc <= 1'b1;
+            ireg_hold <= 1'b1;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b1;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b01;
+        end
 
-	else if(instruction_id == 8'b00111001)			// ST(Y) - ii (2 cycles) // TODO
+        else if(clock_counter == 2'b01)
+        begin
+        // clock cycle 1  
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
+
+        else
+        begin
+            pc_inc <= 1'b0;
+            ireg_hold <= 1'b0;
+            pc_overwrite <= 1'b0;
+            gp_reg_write <= 1'b0;
+            alu_sel <= 3'b000;
+            use_carry <= 1'b0;
+            status_reg_sel <= 1'b0;
+            io_only_flag <= 1'b0;
+            memory_write_en <= 1'b0;
+            sp_write_enable <= 1'b0;
+                                
+            clock_counter <= 2'b00;
+        end
+    end
+
+	else if(instruction_id == 8'b00111001)			// ST(Y) - ii (2 cycles)
+    // 0	0	0	0	000	0	0	0	0
 	begin
-		
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b0;
+        memory_write_en <= 1'b0;
+        sp_write_enable <= 1'b0;
+                            
+        clock_counter <= 2'b00;
 	end
 
 	else if(instruction_id == 8'b00111010)			// ST(Y) - iii
@@ -1317,9 +1875,21 @@ begin
         clock_counter <= 2'b00;
 	end
 
-	else if(instruction_id == 8'b00111111)			// STS (2 cycles) // TODO
+	else if(instruction_id == 8'b00111111)			// STS (2 cycles)
+    // 0	0	0	0	000	0	0	0	0
 	begin
-		
+        pc_inc <= 1'b0;
+        ireg_hold <= 1'b0;
+        pc_overwrite <= 1'b0;
+        gp_reg_write <= 1'b0;
+        alu_sel <= 3'b000;
+        use_carry <= 1'b0;
+        status_reg_sel <= 1'b0;
+        io_only_flag <= 1'b0;
+        memory_write_en <= 1'b0;
+        sp_write_enable <= 1'b0;
+        
+        clock_counter <= 2'b00;
 	end
 
 	else if(instruction_id == 8'b01000000)			// SUB (1 cycle)
@@ -1385,5 +1955,7 @@ assign IO_ONLY_FLAG = io_only_flag;
 assign MEMORY_WRITE_EN = memory_write_en;
 assign SP_WRITE_ENABLE = sp_write_enable;
 assign CLOCK_COUNTER = clock_counter;
+assign instruction_decoder_part2 = 1'b0;
+assign INTERRUPT_STAGE = interrupt_stage;
 
 endmodule
