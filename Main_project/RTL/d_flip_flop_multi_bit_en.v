@@ -2,7 +2,7 @@
 // The width of the flip flop and the reset value can be adjusted using parameters
 
 
-module d_flip_flop_multi_bit_en #(parameter WIDTH = 1, parameter RESETVAL = 0)
+module d_flip_flop_multi_bit_en #(parameter WIDTH = 1, parameter RESETVAL = 1'b0)
 (
 	d, clk, clr_n,	enable,			// System inputs: data, clock and the reset signal
 	Q, Qn
