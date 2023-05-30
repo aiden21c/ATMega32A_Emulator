@@ -21,8 +21,8 @@ wire [7:0] dataB = rom[addr_b];
 wire [7:0] outA;
 wire [7:0] outB;
 
-initial $readmemh("C:/Users/jkdow/Documents/QuartusPrime/EEET2162_ATMega32A_Emulation/Main_project/resources/mem.hex", rom);
-//initial $readmemh("resources/mem.hex", rom);
+// initial $readmemh("C:/Users/jkdow/Documents/QuartusPrime/EEET2162_ATMega32A_Emulation/Main_project/resources/mem.hex", rom);
+initial $readmemh("resources/mem.hex", rom);
 
 always @(posedge(clk)) begin 
 	if (WE == 1'b1) rom[write_addr] = data;

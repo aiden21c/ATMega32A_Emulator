@@ -48,4 +48,19 @@ proc runSim {} {
     force -freeze TIFR_write_enable 0
     run 10000ns
 
+    # Run in idle
+    force -freeze TCNT_write_enable 0
+    force -freeze TCCR_write_enable 0
+    force -freeze OCR_write_enable 0
+    force -freeze TIFR_write_enable 0
+    force -freeze TIMSK_write_enable 0
+    run 15000ns
+
+    # Test utilisation of the clear count
+    force -freeze clear_count 1
+    run 10000ns
+
+    # Test utilisation of the clear count
+    force -freeze clear_count 0
+    run 10000ns
 }

@@ -29,7 +29,7 @@ wire [7:0] TIFR_data_input;
 d_flip_flop_multi_bit_en #(8, 0) TCNT0 (
 	.d(TCNT_input), 
 	.clk(sysClock), 
-	.clr_n(clear_count | system_reset),
+	.clr_n(~(clear_count) & system_reset),
 	.enable(1'b1),
 	.Q(TCNT_output), 
 	.Qn()

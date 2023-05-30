@@ -37,7 +37,7 @@ wire [15:0] TCNT_output;
 d_flip_flop_multi_bit_en #(16, 0) TCNT1 (
 	.d(TCNT_input), 
 	.clk(sysClock), 
-	.clr_n(clear_count | system_reset),
+	.clr_n(~(clear_count) & system_reset),
 	.enable(1'b1),
 	.Q(TCNT_output), 
 	.Qn()

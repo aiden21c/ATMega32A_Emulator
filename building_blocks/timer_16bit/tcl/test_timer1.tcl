@@ -20,9 +20,9 @@ proc runSim {} {
     force -freeze clear_count 0
     force -freeze TCNT1H_input 00000001
     force -freeze TCNT1L_input 11111111
-    force -freeze OCR1AH_input 11111111
+    force -freeze OCR1AH_input 00000001
     force -freeze OCR1AL_input 11111111
-    force -freeze TCCR_input 00000010
+    force -freeze TCCR_input 00000001
     force -freeze TIMSK_input 00000000
     force -freeze TIFR_input 00000000
     # run 200ns
@@ -31,7 +31,8 @@ proc runSim {} {
     # Write the data to the registers
     force -freeze TCNT_write_enable 0
     force -freeze TCCR_write_enable 1
-    force -freeze OCR_write_enable 1
+    force -freeze OCR1_write_enable 1
+    force -freeze OCR2_write_enable 1
     force -freeze TIFR_write_enable 1
     force -freeze TIMSK_write_enable 1
     run 200ns
@@ -39,16 +40,20 @@ proc runSim {} {
     # Run in idle
     force -freeze TCNT_write_enable 0
     force -freeze TCCR_write_enable 0
-    force -freeze OCR_write_enable 0
+    force -freeze OCR1_write_enable 0
+    force -freeze OCR2_write_enable 0
     force -freeze TIFR_write_enable 0
     force -freeze TIMSK_write_enable 0
-    run 30000ns
+    run 50000ns
 
     # Testing clearing of the OCF bit
-    force -freeze TIFR_input 00100000
+    force -freeze TIFR_input 00010000
     force -freeze TIFR_write_enable 1
     run 200ns
     force -freeze TIFR_write_enable 0
+    run 20000ns
+
+    force -freeze clear_count 1
     run 20000ns
 
 }

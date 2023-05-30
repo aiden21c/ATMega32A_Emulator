@@ -18,7 +18,7 @@ module timer_16bit(
 	input TIMSK_write_enable,
 	input TIFR_write_enable,
 	
-	input clear_count,				// Used to clear the TCNT1 register to 0
+	input clear_count,				// Used to clear the TCNT0 register to 0
 	
 	output [7:0] TCNT1H_output,	// 8 bit high output for the TCNT register
 	output [7:0] TCNT1L_output,	// 8 bit low output for the TCNT register
@@ -53,7 +53,7 @@ clockSelector clockSelector(
 	.cnt()
 );
 
-timer_control_unit1 timer_control_unit(
+timer_control_unit1 timer_control_unit1(
 	.sysClock(sysClock),										// The system clock
 	.TCNT1H_input(TCNT1H_input),							// 8 bit input used to update the TCNT1 high register with a specified value
 	.TCNT1L_input(TCNT1L_input),							// 8 bit input used to update the TCNT1 low register with a specified value
@@ -97,6 +97,5 @@ timer_16bit_registers timer_16bit_registers(
 	.TIMSK_output(TIMSK_output),			// 8 bit output for the TIMSK register
 	.TIFR_output(TIFR_output)				// 8 bit output for the TIFR register
 );
-
 
 endmodule

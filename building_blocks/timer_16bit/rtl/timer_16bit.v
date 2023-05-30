@@ -13,7 +13,8 @@ module timer_16bit(
 	// Register write enable signals
 	input TCNT_write_enable,
 	input TCCR_write_enable,
-	input OCR_write_enable,
+	input OCR1_write_enable,
+	input OCR2_write_enable,
 	input TIMSK_write_enable,
 	input TIFR_write_enable,
 	
@@ -80,7 +81,8 @@ timer_16bit_registers timer_16bit_registers(
 	
 	// Write enable signals for the timer registers
 	.TCCR_write_enable(TCCR_write_enable),
-	.OCR_write_enable(OCR_write_enable),
+	.OCR1_write_enable(OCR1_write_enable),
+	.OCR2_write_enable(OCR2_write_enable),
 	.TIMSK_write_enable(TIMSK_write_enable),
 	.TIFR_write_enable((TIFR_write_enable_wire & ~(TIFR_output[4] | TIFR_output[0])) | TIFR_write_enable),
 	

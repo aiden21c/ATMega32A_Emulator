@@ -29,16 +29,16 @@ proc runSim {} {
     force -freeze S	010
 	run 6000ns
 
-	# # Run for 6000ns (clk/64 from prescaler)
-    # force -freeze S	011
-	# run 6000ns
+	# Run for 6000ns (clk/64 from prescaler)
+    force -freeze S	011
+	run 6000ns
 
-	# # Run for 6000ns (clk/256 from prescaler)
-    # force -freeze S	100
-	# run 15000ns
+	# Run for 6000ns (clk/256 from prescaler)
+    force -freeze S	100
+	run 15000ns
 
-	# # Run for 6000ns (clk/1024 from prescaler)
-    # force -freeze S	101
-	# run 20000ns
+	# Run for 6000ns (clk/1024 from prescaler)
+    force -freeze S	101
+	run 20000ns
 }
 

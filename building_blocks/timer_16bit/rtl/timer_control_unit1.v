@@ -36,7 +36,7 @@ always @(TCNT_write_data)
 		if (TCNT_write_data == OCR_data)
 			begin
 				TIFR_we = 1'b1;
-				TIFR_write_data = TIFR_write_data | 8'b00001000;			// Set the OCF1 of the TIFR on successful compare with OCR
+				TIFR_write_data = TIFR_write_data | 8'b00010000;			// Set the OCF1 of the TIFR on successful compare with OCR
 			end
 		else if (TCNT_write_data == 16'b1111111111111111)
 			begin
