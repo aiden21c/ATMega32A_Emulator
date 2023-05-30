@@ -15,16 +15,16 @@ reg system_output = 1'b0;		// Reg used for the system output
 
 always @(sysClock)
 	begin
-		counter = counter + 1;								// Increment the counter on every toggle of the input clock
+		counter <= counter + 1;								// Increment the counter on every toggle of the input clock
 		if (counter > (divider-1))							// If the counter has reached the divider value
 			begin
-				counter = 0;									// Reset the counter to 0
-				system_output = system_output ^ 1;		// Toggle the output clock
+				counter <= 0;									// Reset the counter to 0
+				system_output <= system_output ^ 1;		// Toggle the output clock
 			end		
 		else
 			begin
-				system_output = system_output;			// Hold condition for the system output							
-				counter = counter;							// Hold condition for the counter
+				system_output <= system_output;			// Hold condition for the system output							
+				counter <= counter;							// Hold condition for the counter
 			end
 	end
 
