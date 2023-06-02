@@ -22,6 +22,7 @@
   <FILE>ASMtest.lss</FILE>
  </OUTPUT_FILES>
  <LABELS>
-  <start><FILE>C:\Users\jkdow\Documents\QuartusPrime\EEET2162_ATMega32A_Emulation\ASMtest\ASMtest\main.asm</FILE><LINE>10</LINE></start>
+  <init><FILE>C:\Users\jkdow\Documents\QuartusPrime\EEET2162_ATMega32A_Emulation\ASMtest\ASMtest\main.asm</FILE><LINE>10</LINE></init>
+  <loop><FILE>C:\Users\jkdow\Documents\QuartusPrime\EEET2162_ATMega32A_Emulation\ASMtest\ASMtest\main.asm</FILE><LINE>26</LINE></loop>
  </LABELS>
 </ASSEMBLER_INFO>

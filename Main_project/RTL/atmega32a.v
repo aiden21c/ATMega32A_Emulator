@@ -93,11 +93,23 @@ wire [7:0] ALU_arg1_selected;
 wire [4:0] RF_WA_selected;
 wire [7:0] TIFR_O = tifr_timer0_O | tifr_timer1_O;
 wire [7:0] TIMSK_O = timsk_timer0_O | timsk_timer1_O;
-wire [13:0] PC_new_C = program_counter + {argument_2[5:0], argument_1} + 14'h1;
 wire [15:0] MM_address_mux_B = {8'b0, argument_2};	// 8 bit argument 2
 wire [15:0] MM_address_mux_D = {sp[15:8], alu_output[7:0]}; // 16 bit stack pointer
 wire [7:0] MM_PCH = {2'b0, program_counter[13:8]};
 wire [7:0] MM_SREG_I = {(SREG_O[7]^1'b1), SREG_O[6:0]};
+
+wire [13:0] TC_arg = ~{argument_2[5:0], argument_1} + 14'b1;
+
+//wire [13:0] PC_new_C = program_counter + {argument_2[5:0], argument_1} + 14'h1;
+reg [13:0] PC_new_C; 
+always @(program_counter, TC_arg) begin
+	if(argument_2[5] == 1'b1) begin
+		PC_new_C = program_counter - TC_arg + 14'h1;
+	end
+	else begin
+		PC_new_C = program_counter + {argument_2[5:0], argument_1} + 14'h1;
+	end
+end
 
 wire [511:0] IO_cat_bus = {
 	SREG_O, SPH_O, SPL_O, OCR0_O,

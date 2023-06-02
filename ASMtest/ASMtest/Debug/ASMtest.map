@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.8  C:\Users\jkdow\Documents\QuartusPrime\EEET2162_ATMega32A_Emulation\ASMtest\ASMtest\main.asm Mon May 29 02:13:12 2023
+AVRASM ver. 2.2.8  C:\Users\jkdow\Documents\QuartusPrime\EEET2162_ATMega32A_Emulation\ASMtest\ASMtest\main.asm Mon May 29 04:27:44 2023
 
 
 EQU  SIGNATURE_000 0000001e
@@ -568,4 +568,6 @@ EQU  ACIaddr      00000024
 EQU  TWIaddr      00000026
 EQU  SPMRaddr     00000028
 EQU  INT_VECTORS_SIZE 0000002a
-CSEG start        00000000
+DEF  temp         r16
+CSEG init         00000000
+CSEG loop         0000000a
